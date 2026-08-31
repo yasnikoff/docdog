@@ -22,7 +22,7 @@
  */
 import type Database from "better-sqlite3";
 import type { RelationsRegistry } from "../engine/relations-registry.js";
-import { buildVisibilityIndex, isCrossVisibilityLeak } from "./visibility.js";
+import { buildVisibilityIndex, isCrossVisibilityLeak, isOutsideProjectTree } from "./visibility.js";
 
 export interface UnknownTypeIssue {
   type: string;
@@ -60,6 +60,18 @@ export interface EdgeHealthReport {
   unknownTypeEdges: number;
   /** Edges crossing from in-clone to out-of-clone. Empty outside a git repo. */
   crossVisibility: CrossVisibilityIssue[];
+  /**
+   * Edges whose target is reached by walking out of this project's working
+   * tree — a corpus spread over more than one repository (FRICTION-054).
+   *
+   * NOT a leak and never refused: git knows what a clone of one repository
+   * contains and cannot say whether another one is more or less visible.
+   * What it IS is a completeness fact, and it belongs to the *configuration*
+   * rather than to any edge — so it is counted, and reported once.
+   */
+  crossRepoEdges: number;
+  /** The distinct out-of-tree scan destinations those edges land in. */
+  crossRepoPaths: string[];
 }
 
 const MAX_EXAMPLES = 3;
@@ -87,6 +99,8 @@ export function checkEdgeHealth(
     danglingTargets: [],
     unknownTypeEdges: 0,
     crossVisibility: [],
+    crossRepoEdges: 0,
+    crossRepoPaths: [],
   };
 
   // An empty registry means the project has no relation concept records at
@@ -145,7 +159,10 @@ export function checkEdgeHealth(
       };
     });
 
-  report.crossVisibility = checkCrossVisibility(db, projectRoot);
+  const scan = checkCrossVisibility(db, projectRoot);
+  report.crossVisibility = scan.issues;
+  report.crossRepoEdges = scan.crossRepo.count;
+  report.crossRepoPaths = [...scan.crossRepo.roots].sort();
 
   return report;
 }
@@ -170,7 +187,12 @@ interface ResolvedEdgeRow {
  * fail in. `undecided` on either end is never a violation: an uncommitted
  * record is work in progress, not a leak.
  */
-function checkCrossVisibility(db: Database.Database, projectRoot: string): CrossVisibilityIssue[] {
+interface CrossVisibilityScan {
+  issues: CrossVisibilityIssue[];
+  crossRepo: { count: number; roots: Set<string> };
+}
+
+function checkCrossVisibility(db: Database.Database, projectRoot: string): CrossVisibilityScan {
   const rows = db
     .prepare(
       `SELECT e.from_id, e.to_id, e.type,
@@ -181,18 +203,24 @@ function checkCrossVisibility(db: Database.Database, projectRoot: string): Cross
         ORDER BY vf.file_path, e.from_id, e.to_id`,
     )
     .all() as ResolvedEdgeRow[];
-  if (rows.length === 0) return [];
+  if (rows.length === 0) return { issues: [], crossRepo: { count: 0, roots: new Set<string>() } };
 
   const paths = new Set<string>();
   for (const row of rows) {
     paths.add(row.from_path);
     paths.add(row.to_path);
   }
+  const crossRepo = { count: 0, roots: new Set<string>() };
+
   const visibility = buildVisibilityIndex(projectRoot, [...paths]);
-  if (!visibility.available) return [];
+  if (!visibility.available) return { issues: [], crossRepo };
 
   const issues: CrossVisibilityIssue[] = [];
   for (const row of rows) {
+    if (isOutsideProjectTree(row.to_path) && !isOutsideProjectTree(row.from_path)) {
+      crossRepo.count++;
+      crossRepo.roots.add(row.to_path.split("/").slice(0, 2).join("/"));
+    }
     if (!isCrossVisibilityLeak(visibility.of(row.from_path), visibility.of(row.to_path))) continue;
     issues.push({
       fromId: row.from_id,
@@ -202,7 +230,7 @@ function checkCrossVisibility(db: Database.Database, projectRoot: string): Cross
       toPath: row.to_path,
     });
   }
-  return issues;
+  return { issues, crossRepo };
 }
 
 /** Render the report as warning lines. Empty when the corpus is clean. */
@@ -240,6 +268,18 @@ export function formatEdgeHealthWarnings(report: EdgeHealthReport): string[] {
         `that will not be in a clone — the target's id is published and the edge dangles for ` +
         `everyone else: ${shown.join("; ")}${more > 0 ? `; +${more} more` : ""}. ` +
         `Record the relationship on the other side instead — traverse reads inbound edges.`,
+    );
+  }
+
+  if (report.crossRepoEdges > 0) {
+    const where = report.crossRepoPaths.slice(0, MAX_EXAMPLES).join(", ");
+    const more = report.crossRepoPaths.length - Math.min(MAX_EXAMPLES, report.crossRepoPaths.length);
+    lines.push(
+      `  Cache: this corpus spans more than one repository — ${report.crossRepoEdges} edge(s) ` +
+        `point at records under ${where}${more > 0 ? `, +${more} more` : ""}, outside this ` +
+        `working tree. They resolve here and will not resolve in a clone of this repository ` +
+        `alone. Not a leak: whether that repository is more or less visible than this one is ` +
+        `not something git can answer.`,
     );
   }
 

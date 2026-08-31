@@ -17,7 +17,7 @@
  * binary, the index reports `available: false` and every lookup answers
  * `undecided`, which triggers nothing anywhere.
  */
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { gitIgnoredFiles, gitTrackedFiles, gitWorktreeRoot } from "./git.js";
 
 export type Visibility =
@@ -53,42 +53,101 @@ export function buildVisibilityIndex(
   projectRoot: string,
   repoRelPaths: readonly string[],
 ): VisibilityIndex {
-  const worktreeRoot = gitWorktreeRoot(projectRoot);
-  if (worktreeRoot === null) return UNAVAILABLE;
+  const projectTree = gitWorktreeRoot(projectRoot);
+  if (projectTree === null) return UNAVAILABLE;
 
-  // Path → its location relative to the working tree root, or null when it
-  // lies outside the tree. `relative()` answers a `..` walk for a sibling
-  // directory and an *absolute* path across Windows drive letters, so both
-  // shapes have to be caught.
-  const treeRel = new Map<string, string | null>();
+  // Which working tree OWNS each path — the one whose clone would carry it.
+  // For a path under a scan entry that walks out of the project (`../other/`)
+  // that is a DIFFERENT repository, and the distinction is the whole of
+  // FRICTION-054: a path outside this tree is not "absent from every clone",
+  // it is absent from THIS one.
+  const ownerOf = new Map<string, string | null>();
+  const treeOfDir = new Map<string, string | null>();
+  const relIn = new Map<string, string>();
+
   for (const repoRel of repoRelPaths) {
-    if (treeRel.has(repoRel)) continue;
+    if (ownerOf.has(repoRel)) continue;
     const abs = resolve(projectRoot, repoRel);
-    const rel = relative(worktreeRoot, abs);
-    const outside = rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel);
-    treeRel.set(repoRel, outside ? null : rel.split(sep).join("/"));
+    const inProject = relative(projectTree, abs);
+    const outside =
+      inProject === "" || inProject === ".." || inProject.startsWith(`..${sep}`) || isAbsolute(inProject);
+
+    if (!outside) {
+      ownerOf.set(repoRel, projectTree);
+      relIn.set(repoRel, inProject.split(sep).join("/"));
+      continue;
+    }
+
+    // One `rev-parse` per distinct directory, not per file.
+    const dir = dirname(abs);
+    if (!treeOfDir.has(dir)) treeOfDir.set(dir, gitWorktreeRoot(dir));
+    const owner = treeOfDir.get(dir) ?? null;
+    ownerOf.set(repoRel, owner);
+    if (owner !== null) {
+      const r = relative(owner, abs);
+      relIn.set(repoRel, r.split(sep).join("/"));
+    }
   }
 
-  const tracked = gitTrackedFiles(worktreeRoot);
-  if (tracked === null) return UNAVAILABLE;
-
-  // Only untracked in-tree paths need the second probe. Tracked wins over
-  // ignored by construction — a file that is both is still in the clone —
-  // and `check-ignore` answers 128 for an out-of-tree path, so excluding
-  // both groups here is what keeps the call from failing wholesale.
-  const needIgnoreCheck: string[] = [];
-  for (const rel of treeRel.values()) {
-    if (rel !== null && !tracked.has(rel)) needIgnoreCheck.push(rel);
+  // Batch the two probes per owning tree. Two repositories means two pairs
+  // of git calls, not two per path.
+  const trackedByTree = new Map<string, Set<string>>();
+  const ignoredByTree = new Map<string, Set<string>>();
+  for (const owner of new Set([...ownerOf.values()])) {
+    if (owner === null) continue;
+    const tracked = gitTrackedFiles(owner);
+    if (tracked === null) {
+      // Only the PROJECT's own tree failing is fatal — that is the check's
+      // ground truth. A sibling repository we cannot read leaves its paths
+      // undecided, which triggers nothing.
+      if (owner === projectTree) return UNAVAILABLE;
+      continue;
+    }
+    trackedByTree.set(owner, tracked);
+    const need: string[] = [];
+    for (const [repoRel, o] of ownerOf) {
+      if (o !== owner) continue;
+      const r = relIn.get(repoRel);
+      if (r !== undefined && !tracked.has(r)) need.push(r);
+    }
+    const ignored = gitIgnoredFiles(owner, need);
+    if (ignored === null) {
+      if (owner === projectTree) return UNAVAILABLE;
+      continue;
+    }
+    ignoredByTree.set(owner, ignored);
   }
-  const ignored = gitIgnoredFiles(worktreeRoot, needIgnoreCheck);
-  if (ignored === null) return UNAVAILABLE;
 
   const resolved = new Map<string, Visibility>();
-  for (const [repoRel, rel] of treeRel) {
-    if (rel === null) resolved.set(repoRel, "out-of-clone");
-    else if (tracked.has(rel)) resolved.set(repoRel, "in-clone");
-    else if (ignored.has(rel)) resolved.set(repoRel, "out-of-clone");
-    else resolved.set(repoRel, "undecided");
+  for (const [repoRel, owner] of ownerOf) {
+    // Inside no working tree at all: no clone of anything carries it, so
+    // this is the one out-of-tree case git can be certain about.
+    if (owner === null) {
+      resolved.set(repoRel, "out-of-clone");
+      continue;
+    }
+    const rel = relIn.get(repoRel);
+    const tracked = trackedByTree.get(owner);
+    const ignored = ignoredByTree.get(owner);
+    if (rel === undefined || tracked === undefined || ignored === undefined) {
+      resolved.set(repoRel, "undecided");
+      continue;
+    }
+    if (ignored.has(rel)) {
+      // Excluded from its OWN repository — undistributable wherever it lives.
+      resolved.set(repoRel, "out-of-clone");
+    } else if (owner !== projectTree) {
+      // Tracked (or merely untracked) in ANOTHER repository. Git knows what a
+      // clone of one repo contains; it cannot say whether that repo is more
+      // or less visible than this one, and guessing in either direction is a
+      // claim it has no basis for. Undecided is the honest answer, and it
+      // triggers nothing (FRICTION-054).
+      resolved.set(repoRel, "undecided");
+    } else if (tracked.has(rel)) {
+      resolved.set(repoRel, "in-clone");
+    } else {
+      resolved.set(repoRel, "undecided");
+    }
   }
 
   return {
@@ -99,6 +158,18 @@ export function buildVisibilityIndex(
     // that could produce a false leak report.
     of: (repoRelPath: string) => resolved.get(repoRelPath) ?? "undecided",
   };
+}
+
+/**
+ * True when a path is reached by walking OUT of the project's working tree.
+ *
+ * Not a visibility verdict — a fact about where the corpus lives. Edges that
+ * cross this boundary will not resolve in a clone of this repository alone,
+ * which is worth saying once about the project rather than once per edge.
+ */
+export function isOutsideProjectTree(repoRelPath: string): boolean {
+  const rel = repoRelPath.split("\\").join("/");
+  return rel === ".." || rel.startsWith("../");
 }
 
 /**

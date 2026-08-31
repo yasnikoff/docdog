@@ -17,6 +17,8 @@ relationships:
     context: corpus-ships-whole clause exists to keep the eval re-runnable and OBS-010's published numbers honest
   - references: DP-001
     context: DP-001 check
+  - references: FRICTION-055
+    context: "the general shape this record instantiated — an audit line that was true when written, read seven weeks later as a statement of the present"
   - references: DD-073
     context: "the amendment to clause 2 — discussions ship as stubs rather than whole, because the eval argument turns out to be two queries in forty and the dogfood argument does not reach a transcript"
 description: "How docdog goes public, decided 2026-07-11 after a full audit. (1) The public history starts at publication: a fresh cut of the current tree — the full development history is never pushed, because it contains docs/discussion.md (explicitly gitignored as private) from the v1 era; it stays local as the DD-039 archive. (2) The specs corpus ships whole, no curation: it is the dogfood evidence, and the frozen retrieval-eval gold sets (tests/eval/queries.yaml) reference corpus records by id — curating would break the shipped eval and falsify OBS-010's numbers. (3) The private host-project name is genericized to host-project placeholders in the shipping worktree; generic role nouns like 'orchestrator' stay. (4) No leak-detection pipeline — this was DD-038's ad-hoc review, run once. AMENDED same day: the audit's claim that docs/discussion.md had been removed from the worktree was false — it was still tracked in HEAD (gitignore is inert for tracked files); fixed with git rm --cached so the fresh cut cannot ship it. Reliable sweep for this trap: git ls-files -i -c --exclude-standard. AMENDED 2026-07-20: the open registry question is closed — npmjs (registry.npmjs.org) as @yasnikoff/docdog, because GitHub Packages requires auth even for public installs, which would break the npx wiring docdog init writes into every adopter's .mcp.json; unscoped docdog and a @docdog org were both checked and rejected (squatted / brand mismatch). .npmrc deleted, HANDOFF-*.md untracked+gitignored. AMENDED 2026-08-31: clause 2 gains one exception (DD-073) — the 41 discussion records ship as STUBS carrying id, title, status, date and the full relationship graph, with bodies and descriptions moved to a private sibling repo; the eval ground for ships-whole was 2 of 40 golds and both still resolve, and the stub is what keeps the 117 inbound edges from dangling. Clause 1 is now load-bearing for a second reason: the full bodies live only in this repo's local history."
@@ -174,6 +176,52 @@ The full bodies stay in this repo's local history. If v3 history is
 ever pushed the stubs publish nothing, because the bodies go with it.
 Clause 1 was already never-push; it is now load-bearing for a second
 reason.
+
+## Amendment (2026-08-31): this record's audit line aged into a false claim about the present
+
+The 2026-07-11 audit says *"`origin/main` today is a single empty
+'Initial commit', so nothing sensitive is public yet."* True when
+written. **False from 2026-08-14**, when three cuts — `ca33c4e` (v3),
+`6ffe214` (v0.2.1), `2709342` (v0.3.0) — were pushed to a public
+repository, carrying **37 of the 41 discussion records in full**.
+
+**Nothing was violated.** Clause 1 held: each push was a fresh cut, and
+`docs/discussion.md` appears in none of the three. Clause 2 was
+*executed* — the corpus shipped whole, discussions included, exactly as
+decided. The discussions were public because this record said they
+should be.
+
+What went wrong is one layer up. DD-073 was designed and built on
+2026-08-31 to keep the discussions private, and the sentence above was
+read as a statement of current fact rather than a dated audit finding.
+One `gh repo view` would have shown the repository public with 37 full
+records in it; the check was never run, because the corpus had already
+answered.
+
+### What was done about it
+
+The repository was **deleted and recreated** on 2026-08-31, and a
+single orphan commit (`60d9131`) pushed in its place — 587 files, 41
+discussion stubs, zero discussion bodies. The old commits, and the
+`v0.2.0`/`v0.2.1`/`v0.3.0` tags pointing into them, went with it.
+
+**That is best-effort, not erasure**, and the distinction is the point:
+anyone who cloned between 2026-08-14 and 2026-08-31 still holds all 37.
+The repository had 0 forks and 0 stars, so the practical exposure is
+probably nil — and *probably* is the honest word. Treat DISC-038..041
+as the only records the split actually kept private, and the rest as
+private going forward rather than retroactively.
+
+Two things survived the recreation and are worth recording because
+neither was certain in advance: npm's **trusted publisher matched on
+the repository name, not an id**, so publishing worked untouched; and
+the `release` environment had to be rebuilt by hand from a captured
+copy, because deleting a repository destroys its environments and
+their protection rules.
+
+The general failure is FRICTION-055: a record can carry a claim about
+the world outside the corpus, and nothing — not `status`, not the
+index, not the reader — can notice when the world has moved.
 
 ## DP-001 check
 

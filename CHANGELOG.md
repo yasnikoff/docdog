@@ -17,6 +17,57 @@ upgrading — the MCP tool `docdog_status` says so in its **Server** block. The
 CLI cannot: `docdog status` describes the installation on disk, and knows
 nothing about a server process someone else started.
 
+## 0.4.1
+
+**Action required:** none. If you keep one corpus in more than one
+repository — a scan path that walks out of your working tree — upgrade,
+because 0.4.0 refuses to write edges across that boundary.
+
+### Fixed
+
+**An edge into another repository is no longer treated as a leak
+(FRICTION-054).** 0.4.0's cross-visibility guard classified every path
+against a single working tree, so anything reached by an external
+`scan_paths` entry was "not in a clone" — and the rule inverted on
+exactly the arrangement it was supposed to protect. Concretely, in a
+private repo whose corpus reaches into a public one:
+
+- `docdog relate` **refused** every edge to the public records, saying
+  it would publish an id that the more-public repository had already
+  published;
+- the repair it named — *record it on the other side* — when followed,
+  **patched a file in the other repository**, where the same id resolved
+  to a different record;
+- `docdog index` reported one leak per crossing edge, forever.
+
+Git knows what a clone of one repository contains. Whether a *different*
+repository is more or less visible than this one is not a git fact, and
+0.4.0 guessed. It now answers **`undecided`** — the state the guard
+already had for *not determinable, triggers nothing*.
+
+Nothing was loosened where git is certain. A target is still
+`out-of-clone`, and an edge into it still refused and reported, when it
+is ignored in this working tree, ignored in **its own** working tree, or
+outside **every** working tree — the last because no clone of anything
+carries it.
+
+The one true half of the old message survives, said once about the
+project instead of once per edge:
+
+```
+Cache: this corpus spans more than one repository — 344 edge(s) point at
+records under ../other, outside this working tree. They resolve here and
+will not resolve in a clone of this repository alone. Not a leak: whether
+that repository is more or less visible than this one is not something
+git can answer.
+```
+
+**What this gives up, stated plainly:** docdog no longer flags a public
+repository that points into a private sibling. It never flagged that
+*distinguishably* — it flagged every crossing edge — so in any split
+configuration the signal was already noise, and a guard that fires on
+the benign case as loudly as the harmful one is a guard you turn off.
+
 ## 0.4.0
 
 **Action required:** run `docdog update` in every repo that has adopted

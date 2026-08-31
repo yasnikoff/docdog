@@ -6,6 +6,22 @@
 # when the body changes the candidate comes back carrying this reason.
 version: 1
 rejections:
+  - from: DD-073
+    to: DISC-001
+    reason: "range enumeration — DISC-001..037 names the cohort that was public for 17 days; the id is a range bound, not a cited record"
+    source_hash: sha256:019345bba8ce5b02ac3de8df4cd14a0f9255f81898dece78f5bb28d014bd2204
+  - from: DD-073
+    to: DISC-016
+    reason: "range enumeration — the text says DISC-016..021, a statement about which records carry a collection drift, and the scanner catches only the first id of the range (OBS-014's slash-list blind spot). An edge here would assert a relationship to an arbitrary member of a set"
+    source_hash: sha256:019345bba8ce5b02ac3de8df4cd14a0f9255f81898dece78f5bb28d014bd2204
+  - from: DD-073
+    to: DISC-032
+    reason: "second half of the same DISC-032..040 range enumeration; same reasoning as DISC-016"
+    source_hash: sha256:019345bba8ce5b02ac3de8df4cd14a0f9255f81898dece78f5bb28d014bd2204
+  - from: DD-073
+    to: DISC-038
+    reason: "range enumeration — DISC-038..041 names the four records that were never published, a set membership claim rather than a relationship to its first element"
+    source_hash: sha256:019345bba8ce5b02ac3de8df4cd14a0f9255f81898dece78f5bb28d014bd2204
   - from: DISC-001
     to: DD-073
     reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
@@ -221,11 +237,15 @@ rejections:
   - from: FRICTION-054
     to: DISC-001
     reason: "quoted illustration — DISC-001 appears only inside the verbatim index output, narrating an edge between two other records; the record cites the message, not the discussion"
-    source_hash: sha256:1449879352bf7e4eec39b8f46f17cbab2026a268a20ba23315165edbda915fef
+    source_hash: sha256:aad872aadc55cdfdf0825d70980e1b089af444c5a898af0e251906619f184550
+  - from: FRICTION-054
+    to: DISC-002
+    reason: "quoted illustration again — DISC-002 is the source id in the refusal message and in the relate probe quoted in the resolution; the note is about the guard, not about that discussion"
+    source_hash: sha256:aad872aadc55cdfdf0825d70980e1b089af444c5a898af0e251906619f184550
   - from: FRICTION-054
     to: FRICTION-006
     reason: "same quoted illustration as DISC-001 — it is the target of the sample edge in the error text, not a record this note is about"
-    source_hash: sha256:1449879352bf7e4eec39b8f46f17cbab2026a268a20ba23315165edbda915fef
+    source_hash: sha256:aad872aadc55cdfdf0825d70980e1b089af444c5a898af0e251906619f184550
   - from: OBS-003
     to: PROPOSAL-013
     reason: "anticipated next-free-number (OBS-011 taxonomy 1) — a projected id that PROPOSAL-013 did not turn out to be"

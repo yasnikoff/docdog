@@ -40,6 +40,35 @@ open the file at `.docdog/workflows/wf-NNN-<slug>.md`. When a
 process changes, edit the workflow artifact and reindex — do not
 re-narrate it here.
 
+## The corpus is not a monitor (FRICTION-055)
+
+**Before acting on a corpus claim about mutable state OUTSIDE this
+repository — what is published, what is installed, what a registry
+holds, what another repo contains — re-measure it.** It costs one
+command.
+
+A record holds two kinds of claim and stores them identically: **what
+was decided**, which is durable by construction and is what a corpus is
+for, and **what was observed**, which is a measurement with a timestamp
+and starts ageing the moment it is written. Both sit in the same
+paragraph, at the same `status`, retrieved by the same query, with the
+same authority.
+
+`status` cannot separate them and is not broken for failing to: DD-071
+was correctly `current` for seven weeks while containing
+*"origin/main today is a single empty Initial commit, so nothing
+sensitive is public yet"* — false from 2026-08-14, and the basis on
+which DD-073 was designed to keep 41 discussion records private when
+37 of them were already public. FRICTION-053's fix does not reach this
+either; every surface reported `current`, accurately. Dating the prose
+did not help, because retrieval returns a passage stripped of its
+distance from now.
+
+This does not weaken the standing rule that corpus questions go
+through docdog rather than around it. It bounds it. The corpus answers
+*what did we decide and why*, authoritatively and forever. It cannot
+answer *what is true right now, out there*, and it will answer anyway.
+
 ## Documentation layout
 
 **Current:**
@@ -415,6 +444,37 @@ docdog relate <a> <b>  # record an outbound edge, --type --context (PROPOSAL-032
                        #   is that a MARKER CAN DISAGREE WITH REALITY — a record stamped
                        #   `scope: private` that is nonetheless committed reads as a
                        #   guarantee and is a decoration (FRICTION-052's shape).
+#   THREE STATES, and a target in ANOTHER REPOSITORY is the
+                       #   third one (FRICTION-054, 0.4.1). tracked here = in-clone;
+                       #   ignored HERE, ignored in ITS OWN worktree, or outside EVERY
+                       #   worktree = out-of-clone; inside/untracked/unignored, OR
+                       #   tracked in a different repository = UNDECIDED, which triggers
+                       #   nothing. That last clause is the fix: 0.4.0 classified every
+                       #   path against ONE worktree, so anything an external scan_paths
+                       #   entry reached was "not in a clone" — and the rule INVERTED on
+                       #   DD-073's own split, where private -> public is
+                       #   less-visible -> more-visible, the direction PROPOSAL-047
+                       #   PERMITS. It refused every such write, and the repair it named,
+                       #   when followed, PATCHED A FILE IN THE OTHER REPOSITORY where
+                       #   the same id resolved to the stub.
+                       #   The principle: GIT KNOWS WHAT A CLONE OF ONE REPOSITORY
+                       #   CONTAINS AND CANNOT RANK TWO REPOSITORIES' AUDIENCES. So the
+                       #   honest answer is `undecided`, not a fourth state and not a
+                       #   config key — a scan entry declaring a path trusted would be
+                       #   the declared visibility this proposal refused, and a
+                       #   declaration can disagree with reality (FRICTION-052's shape).
+                       #   Nothing loosened where git IS certain: ignored anywhere it
+                       #   lives, or in no repository at all, is still refused.
+                       #   COST, NAMED: docdog no longer flags a public repo pointing
+                       #   into a private sibling. It never flagged that distinguishably
+                       #   — it flagged every crossing edge — so the signal was already
+                       #   noise in any split, which is what got it filed.
+                       #   The completeness half is TRUE and survives, said ONCE PER
+                       #   PROJECT rather than once per edge, because it belongs to the
+                       #   configuration: "this corpus spans more than one repository —
+                       #   N edge(s) point at records under ../x … Not a leak."
+                       #   `isOutsideProjectTree` in storage/visibility.ts is that fact;
+                       #   `crossRepoEdges`/`crossRepoPaths` on EdgeHealthReport carry it.
                        #   THREE states, and the third is what makes it usable:
                        #   tracked = in-clone; ignored OR outside the worktree =
                        #   out-of-clone (one state, since the reasons differ and the

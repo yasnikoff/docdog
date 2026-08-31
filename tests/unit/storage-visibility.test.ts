@@ -18,6 +18,7 @@ import { runCacheIndexer, type CacheIndexerOptions, type EmbedBatchFn } from "..
 import {
   buildVisibilityIndex,
   isCrossVisibilityLeak,
+  isOutsideProjectTree,
   type Visibility,
 } from "../../src/storage/visibility.js";
 import {
@@ -622,5 +623,109 @@ describe.skipIf(!gitPresent)("cross-visibility candidate marking", () => {
     // The four-space form is the ROW field; the header legitimately
     // explains `reject:` as an option the reviewer may choose.
     expect(doc).not.toContain("    reject:");
+  });
+});
+
+/**
+ * The two-repository case — FRICTION-054.
+ *
+ * A corpus reached through an external `scan_paths` entry lives in another
+ * repository, and git knows what a clone of ONE repository contains without
+ * being able to say whether another is more or less visible. Calling every
+ * such target out-of-clone inverted the rule on exactly the arrangement
+ * DD-073 created: private record -> public record is less-visible ->
+ * more-visible, which PROPOSAL-047 permits, and it was refused.
+ *
+ * The pin is the PAIR. Same sibling repository, same edge shape; the only
+ * difference is whether the target is ignored where it lives.
+ */
+describe.skipIf(!gitPresent)("buildVisibilityIndex across repositories", () => {
+  let base: string;
+  let proj: string;
+  let sibling: string;
+
+  beforeEach(() => {
+    base = mkdtempSync(join(tmpdir(), "docdog-vis-repos-"));
+    proj = join(base, "proj");
+    sibling = join(base, "sibling");
+    mkdirSync(join(proj, "specs"), { recursive: true });
+    mkdirSync(sibling, { recursive: true });
+
+    writeFileSync(join(proj, "specs", "own.md"), record("OWN-001"));
+    writeFileSync(join(sibling, "open.md"), record("SIB-OPEN"));
+    writeFileSync(join(sibling, "hidden.md"), record("SIB-HIDDEN"));
+    writeFileSync(join(sibling, ".gitignore"), "hidden.md\n");
+
+    for (const d of [proj, sibling]) {
+      git(d, "init");
+      git(d, "config", "user.email", "t@example.com");
+      git(d, "config", "user.name", "t");
+    }
+    git(proj, "add", "specs/own.md");
+    git(proj, "commit", "-m", "init");
+    git(sibling, "add", ".gitignore", "open.md");
+    git(sibling, "commit", "-m", "init");
+  });
+
+  afterEach(() => {
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  const classify = (...paths: string[]) => {
+    const index = buildVisibilityIndex(proj, paths);
+    expect(index.available).toBe(true);
+    return paths.map((p) => index.of(p));
+  };
+
+  it("calls a file tracked in ANOTHER repository undecided, not out-of-clone", () => {
+    expect(classify("../sibling/open.md")).toEqual(["undecided"]);
+  });
+
+  it("still calls a file its own repository ignores out-of-clone", () => {
+    // The protection that must survive: excluded where it lives is
+    // undistributable wherever you look at it from.
+    expect(classify("../sibling/hidden.md")).toEqual(["out-of-clone"]);
+  });
+
+  it("does not fire the guard on an edge into a sibling repository", () => {
+    const [from, to] = classify("specs/own.md", "../sibling/open.md");
+    expect(isCrossVisibilityLeak(from, to)).toBe(false);
+  });
+
+  it("still fires on an edge into a record the sibling repository ignores", () => {
+    const [from, to] = classify("specs/own.md", "../sibling/hidden.md");
+    expect(isCrossVisibilityLeak(from, to)).toBe(true);
+  });
+
+  it("classifies both sibling states and its own in one pass", () => {
+    expect(classify("specs/own.md", "../sibling/open.md", "../sibling/hidden.md")).toEqual([
+      "in-clone",
+      "undecided",
+      "out-of-clone",
+    ]);
+  });
+
+  it("survives a sibling directory that is not a repository at all", () => {
+    // No clone of anything carries it, which is the one out-of-tree verdict
+    // git can be certain about.
+    mkdirSync(join(base, "plain"), { recursive: true });
+    writeFileSync(join(base, "plain", "p.md"), record("PLAIN-001"));
+    expect(classify("../plain/p.md")).toEqual(["out-of-clone"]);
+  });
+});
+
+describe("isOutsideProjectTree", () => {
+  it("is true only for a path that walks out of the project", () => {
+    expect(isOutsideProjectTree("../other/x.md")).toBe(true);
+    expect(isOutsideProjectTree("..")).toBe(true);
+    expect(isOutsideProjectTree("specs/x.md")).toBe(false);
+    expect(isOutsideProjectTree("CONTRIBUTING.md")).toBe(false);
+  });
+
+  it("is a fact about the path, not a visibility verdict", () => {
+    // It answers "does this corpus span repositories", which is reported
+    // once per project. Nothing here refuses a write.
+    expect(isOutsideProjectTree("../sibling/open.md")).toBe(true);
+    expect(isOutsideProjectTree("../sibling/hidden.md")).toBe(true);
   });
 });

@@ -2,9 +2,11 @@
 id: FRICTION-054
 title: "A corpus split across two repositories reports on every index run whichever way it is configured, and the repair it names cannot be performed"
 collection: notes
-status: open
-description: "DD-073's split gives the private project 344 cross-visibility leak warnings, because its records point at a corpus reached by an external scan path. Scanning only itself would give it 344 dangling targets instead. PROPOSAL-047 folds `ignored` and `outside the worktree` into one state on the grounds that the consequence is identical; this is the case where it is not."
-severity: inconvenient
+status: resolved
+fixed_date: 2026-09-01
+resolution_approach: fix
+description: "RESOLVED. DD-073's split gives the private project 344 cross-visibility leak warnings, because its records point at a corpus reached by an external scan path. Scanning only itself would give it 344 dangling targets instead. The real defect was larger: relate REFUSED every cross-repo edge, the repair it named wrote into the other repository and retargeted to the stub, and the rule inverted. Fixed by making a target in another working tree UNDECIDED — git cannot rank two repositories audiences — while keeping out-of-clone wherever git is certain."
+severity: blocks-work
 relationships:
   - references: PROPOSAL-047
     context: "the guard this reports against — specifically its three-state model, which folds `gitignored` and `outside the worktree` into one `out-of-clone` state"
@@ -108,3 +110,98 @@ Held, not proposed. This is the first instance, and PROPOSAL-047
 shipped four days ago; a second corpus configured this way is the
 evidence that would make it a design question rather than a note
 (DP-003 clause 3).
+
+## Resolution (2026-09-01) — and this record's own analysis was wrong
+
+Everything above describes a noisy report. Three things it missed, all
+found by running the guard rather than reading it:
+
+**1. `relate` is refused, not merely noisy.** Every edge from a record in
+the private project to any record in the public corpus:
+
+```
+Error [RELATE_ERROR]: DISC-002 … is in this repository and DD-073 … will
+not be in a clone of it — writing this edge publishes DD-073's id …
+```
+
+DD-073 is in a **public** repository. Its id was published by the more
+-public party. Nothing is disclosed, and the feature is unusable in the
+arrangement DD-073 had created the day before.
+
+**2. The named repair, followed, writes into the other repository.** Run
+from the private project, `relate DD-073 DISC-002` is *permitted* — the
+reversed direction is the repair — and it patched
+`../docdog/specs/decisions/dd-073-…md`, a file in the public repo. Worse,
+in that repo the id `DISC-002` resolves to the **stub**, so following the
+advice silently re-points the relationship at a placeholder.
+
+**3. The rule inverts.** PROPOSAL-047 permits *less-visible →
+more-visible*. Private repo → public repo **is** that direction. The
+check said otherwise because `buildVisibilityIndex` classified every path
+against **one** working tree — the project's — where "outside my tree"
+scores as less visible when it may be more.
+
+### Both fixes this record proposed were wrong
+
+The **fourth state derived from an external `scan_paths` entry** — the
+one held above — makes **config an input to visibility**, contradicting
+PROPOSAL-047's load-bearing commitment that visibility is derived from
+git and never declared. A config entry is a declaration, and a
+declaration can disagree with reality (FRICTION-052's shape, which this
+record cited while proposing it).
+
+The obvious alternative, **classify each path in its own working tree**,
+fails on the mirror case: a *public* repo with a scan path into a
+*private* sibling would find the target tracked where it lives, call it
+in-clone, and miss a real leak.
+
+### What was actually built
+
+**Git cannot compare audiences across repositories.** It knows what a
+clone of one repo contains; whether another repo is more or less visible
+than this one is not a git fact. So a target in a different working tree
+is **`undecided`** — the state PROPOSAL-047 already had for *not
+determinable, triggers nothing*. No new state, no config input.
+
+`out-of-clone` is kept exactly where git IS certain:
+
+| target | verdict | why |
+|---|---|---|
+| ignored in this tree | `out-of-clone` | excluded from the clone that would carry it |
+| ignored in **its own** tree | `out-of-clone` | undistributable wherever you stand |
+| outside **every** working tree | `out-of-clone` | no clone of anything holds it |
+| tracked in another repository | **`undecided`** | git cannot rank the two audiences |
+| untracked, unignored, in this tree | `undecided` | work in progress, unchanged |
+
+And the completeness fact — true, and the only true half of the old
+message — is reported **once per project instead of once per edge**,
+because it belongs to the configuration rather than to any edge:
+
+```
+Cache: this corpus spans more than one repository — 344 edge(s) point at
+records under ../docdog, outside this working tree. They resolve here and
+will not resolve in a clone of this repository alone. Not a leak: whether
+that repository is more or less visible than this one is not something
+git can answer.
+```
+
+### What it costs
+
+Docdog no longer flags a public repo that points into a private sibling.
+It never flagged that *distinguishably* — it flagged every cross-repo
+edge, so in any split configuration the signal was already noise, which
+is what this record was filed about. A guard that cannot separate the
+harmful case from the benign one, firing on both, is a guard that gets
+turned off.
+
+### Measured
+
+- private project: **344 leak reports → 0**, plus one completeness line
+- `relate` from the private project to the public corpus: **works**
+- an in-tree gitignored target: **still refused**, message unchanged
+- a sibling repo's gitignored record: **still refused**
+- a directory that is not a repository: **still refused**
+
+`tests/unit/storage-visibility.test.ts` pins the pair on one sibling
+repository where the only difference is whether the target is ignored
+where it lives. 858 → 866 tests.

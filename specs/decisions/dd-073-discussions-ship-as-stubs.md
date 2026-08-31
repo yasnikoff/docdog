@@ -6,6 +6,8 @@ status: current
 date: 2026-08-31
 description: "Amends DD-071 clause 2. The 41 DISC records ship as stubs carrying id, title, status, date and the full relationship graph with contexts; the bodies and descriptions move to a private sibling repository. Because a stub and its record share an id, the two halves are two docdog projects and must never be one corpus."
 relationships:
+  - references: FRICTION-055
+    context: "the trap this walked into — the corpus answered a question about the outside world, confidently and seven weeks out of date, and the check that would have caught it was one command"
   - references: DD-071
     context: "the boundary this amends — clause 2 said the corpus ships whole and rejected curation; that was right for every collection except the one that is a conversation rather than a document"
   - references: OBS-028
@@ -22,6 +24,16 @@ relationships:
     context: "tier 1 throughout: deriving a stub is dropping fields from frontmatter. Which records get stubbed, and what the pointer says, is the judgment, and a person made it once"
   - references: DP-003
     context: "clause 3 held to, not invoked — this is the first hand-rolling of a stub, so no command was built"
+  - references: FRICTION-045
+    context: the --has predicate that makes `retained_privately` a queryable field rather than a decoration — which is why the stub carries a value naming where, not a boolean
+  - references: PROPOSAL-027
+    context: the --where filter that reaches `retained_privately` as a scalar; together with --has it is what keeps the marker useful after the split
+  - references: OBS-019
+    context: one of the three measurement disciplines this decision applied rigorously inside the corpus and never once outside it — the amendment is what that cost
+  - references: OBS-027
+    context: "the second of those three, and the one that also supplies this record's refusal of a verify-by field: a hand-maintained axis added to police another"
+  - references: FRICTION-044
+    context: the third, four days earlier and the closest analogue — a claim about the world inferred rather than measured, when measuring was two commands
 ---
 
 # DD-073: Discussions ship as stubs
@@ -166,3 +178,50 @@ either, which is why it is stated here as well as there.
   the private repo.** It is a fresh commit today, cut from
   `docdog@a3df21b`; this repo's local history remains the archive, per
   DD-071 clause 1.
+
+## Amendment (2026-08-31, same day): it kept four private, not forty-one
+
+**37 of the 41 records this decision protects were already public**,
+and had been since 2026-08-14, on three cuts pushed to
+`github.com/yasnikoff/docdog` under DD-071 clause 2's ships-whole rule.
+Only **DISC-038, 039, 040 and 041** had never been published.
+
+This was not discovered until the publish step, hours after the split
+shipped. The Context section above prices the alternatives against
+each other and never asks the prior question — *are they public
+already?* — because DD-071 said they were not, in a sentence written
+seven weeks earlier and read as current. The measurement discipline
+this corpus keeps re-learning (OBS-019, OBS-027, FRICTION-044) was
+applied to everything inside the corpus and to nothing outside it.
+
+### What changed as a result
+
+The public repository was **deleted and recreated** with a single
+orphan commit carrying the stubs. That removes the 37 from
+`github.com`; it does not remove them from any clone taken in the
+17-day window. Deletion is best-effort and the decision should not be
+read as claiming more.
+
+So the honest statement of what this decision achieves:
+
+- **DISC-038..041** — kept private, never published
+- **every future discussion** — kept private by construction
+- **DISC-001..037** — private going forward, public for 17 days, and
+  irrecoverable from anyone who cloned in that window
+
+The design is unchanged and the reasoning for it stands — the stub
+shape, the free relationship graph, the two-project constraint, and
+the 117-edge argument were all measured on their own terms (OBS-028)
+and none of them depended on the records being unpublished. What
+changes is the claim about what it was worth, and a decision record
+that overstates its own effect is the failure this corpus names in
+other people's designs.
+
+### Correction to clause 2
+
+`docdog-discussions` **has a remote**: `github.com/yasnikoff/docdog-discussions`,
+**private**. The original text said "No remote", which was true for
+about four hours.
+
+See FRICTION-055 for the general shape, and DD-071's 2026-08-31
+amendment for the audit line that produced it.
