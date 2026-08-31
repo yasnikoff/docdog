@@ -1,0 +1,79 @@
+# Publish to npm via Trusted Publishing (OIDC) — no token exists anywhere.
+#
+# GitHub mints a short-lived identity token for this workflow; npm verifies it
+# against the trusted publisher registered on the package. There is no secret
+# in this repo, none on a laptop, and nothing to leak or rotate. It also
+# attaches a provenance attestation, so the published tarball is verifiably
+# built from this repo at this tag.
+#
+# npm binds the publisher to (repository, workflow filename, environment), so
+# renaming this file breaks publishing until the publisher is updated. That is
+# the intended failure direction: it fails closed.
+#
+# Requires npm >= 11.5.1 in the runner — Node 24 ships it. The `npm --version`
+# step is there so a runner that ever regresses fails legibly, instead of with
+# an authentication error that reads like a permissions problem.
+name: publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write # the whole authentication story
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    # The control that survives a stolen git credential. Anyone who can push a
+    # tag can otherwise publish whatever the workflow file at that tag says —
+    # the publisher binds to a filename, not to reviewed content. This makes a
+    # publish wait for a human approval even when the tag push was automated,
+    # so "whoever can push" becomes "whoever can push AND whoever can approve".
+    # Must match the environment named in npm's trusted-publisher config.
+    environment: release
+
+    steps:
+      # Actions are pinned to commit SHAs, not tags: this job holds
+      # id-token: write, so a compromised tag on a third-party action would be
+      # running inside the one job that can authenticate as the publisher.
+      # actions/checkout@v6.1.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      # actions/setup-node@v6.5.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          # npm's own guidance for release builds: a cache is one more thing
+          # that can put bytes you did not build into a tarball you sign.
+          package-manager-cache: false
+
+      - run: npm --version
+
+      # `npm ci` runs `prepare`, which builds dist/ — the bin points there and
+      # it is gitignored, so this step is what makes the package non-empty.
+      - run: npm ci
+
+      # The tag is the release's only input, so it must not be able to
+      # disagree with the thing being released. A v0.5.0 tag on a 0.4.0
+      # package.json would otherwise publish 0.4.0 under a name nobody can
+      # find it by.
+      - name: Tag matches package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag $GITHUB_REF_NAME says $tag, package.json says $pkg" >&2
+            exit 1
+          fi
+
+      - run: npm run lint
+      - run: npm test
+
+      # No --provenance flag: trusted publishing attaches the attestation on
+      # its own. No NODE_AUTH_TOKEN either — that is the point.
+      - run: npm publish

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "docdog": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "src/cli/index.ts",
+        "serve"
+      ]
+    }
+  }
+}

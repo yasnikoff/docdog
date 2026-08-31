@@ -1,0 +1,296 @@
+# Edge candidates judged and rejected — docdog suggest-edges will not re-offer
+# these while the source body is unchanged (PROPOSAL-046).
+#
+# Delete a row to un-reject its pair. Edit a reason freely; it is prose.
+# source_hash is the source record's body hash at the moment of judgment:
+# when the body changes the candidate comes back carrying this reason.
+version: 1
+rejections:
+  - from: DISC-001
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:95e8f9aebcef7c44fe6e1bbe0c2c4608257c4df655a6910d2699591b596006de
+  - from: DISC-002
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:89470d1af0118fa31270bfc5d5e8c4bfc791a64ab115c2c712e491ad845bda6d
+  - from: DISC-003
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:1f408ff294fa2cb7ccb8a8ae11fab0c3ae06dcedbc13754a20af759de9ba61cd
+  - from: DISC-004
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:b800e01b0541fd6851689cc01211500058e38de561153910331ff660e6d62932
+  - from: DISC-005
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:892780e7d622b32203a18091dd9c386257cb122f6a55c3f2dd685e6213e3b449
+  - from: DISC-006
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:c30dc32c4e2682fd5c899ff4a5b91210b10084a1420d40fd00739e6462f1ffa5
+  - from: DISC-007
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:03a105dabdcb585671eaa9524db6474675496369c261954ec06cd90588b5bcfd
+  - from: DISC-008
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:0b99cebca3fe88d76c6f8a05b794311780e6168384bb8a09c9f9a80bf3820905
+  - from: DISC-009
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:00260fd46a7d19776e681ed4321cb6866e82268d2a1325d8444321da9dbd8e9d
+  - from: DISC-010
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:473764c0d2a30603407fd2822316f6da6ac7d961955aac341beaa40b31af3781
+  - from: DISC-011
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:141896fe9eeb6405aee4e7d0a97bdb8ec53f151c286076f198406a6d48b7b336
+  - from: DISC-012
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:3b29d12e40b4759e993080f52197deb38c6bde34a7317e5fda55644836c97169
+  - from: DISC-012
+    to: PROPOSAL-018
+    reason: "anticipated next-free-number (OBS-011 taxonomy 1) — the number was guessed and PROPOSAL-018 landed elsewhere"
+    source_hash: sha256:7aa14264f9a51c17f0da5d52ee3fa3b2c52cab7ddd8a9b01f5e662e3da9bd660
+  - from: DISC-013
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:8e08c1a2562e55cc674242e63f88e814ceaaaa149915d8a4d35313f118eec8f4
+  - from: DISC-014
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:f8114abdc250b17b653362a074947bbe6743e87d9c2c479a48a463c0e5424d99
+  - from: DISC-015
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:980b29a200eb2ec5c1422231165e339a8c879a778d4cd64c2715a4d120812b46
+  - from: DISC-016
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:54b1267d4de5822fc4dfde203705ee7478ba96c05304d72ac8b9b3b0602253c1
+  - from: DISC-017
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:8a9e56ae6961cbe08098bab0ad97a28e911aef39f255a2f4a81e26193c1a3817
+  - from: DISC-018
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:0de200e95895126ae7eb3a8a102c0c2bad3d042235b71ffad239f16bd641f145
+  - from: DISC-019
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:8594fad4fa2ae7f71a7977f05bbade3f2610a4058a08b27a3c35f00c8ae0e7cd
+  - from: DISC-020
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:8fb746e94b512a3b91560acff088d1b71557e8c9754d4c7f51a786b0e095b2aa
+  - from: DISC-021
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:fdefdf714087ca697a72a9e20df3efa3b995d4038aba08b6d3a6a1dffecbd144
+  - from: DISC-021
+    to: PROPOSAL-024
+    reason: "anticipated next-free-number (OBS-011 taxonomy 1) — the text guesses at a future proposal id and PROPOSAL-024 landed on different content"
+    source_hash: sha256:783e034de41f8a65b314336872015eeaccaa36adb065c4dd8d1ad2a447c085fb
+  - from: DISC-022
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:c7ae2ec73644d249b0d854e820c7447b1557abce86dc3d82b341266ea663bd66
+  - from: DISC-023
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:55ce48d5373f7381de7666dd06f639695502b05a6cc71b305e355bf61b6e0305
+  - from: DISC-024
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:343176561949f1affcfd29085af7ef48851695f4a4e73e5ae77fa31ad043bab6
+  - from: DISC-025
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:bd57681c8f0a91f85d51ca6876297b74e346f2aa776adf558334338318e1e0c8
+  - from: DISC-026
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:507888fa1489e45decbfdd07e79e54277d21bbabb6ef72b90850f036ce90c79b
+  - from: DISC-027
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:bdc0d9ab058d12d3fb1ecaf854f67b9e620690b6ded99fb24964f31d7a773119
+  - from: DISC-028
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:07881c89d83c39c51799b30898c024c89fdcbe1af3888bc026341359d4091040
+  - from: DISC-029
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:e9cbbaebe0de1274d0ff1c936c85a924e22f206f713211b7517678253b42e493
+  - from: DISC-030
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:2bc4001da89aaa7b387a6f1775f4009ac82b207441aab6191887e3b5bb670277
+  - from: DISC-031
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:de2d4ecd6acfda01f3fecc7c7edef0e09ba5beb179e937e817307dab83ddf864
+  - from: DISC-032
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:11db1a8eb1d93689d35301cbc0653a60c2a1747993963d3cb7aea795dba38380
+  - from: DISC-033
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:fcd8ac19fe972e537791da2e0ff19e25ec86fd3dcf4e265d13fa780c0321ec80
+  - from: DISC-034
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:2d01f575e1dbb634b9285badddd29c154a037db988380055f324dd328b6b00d1
+  - from: DISC-035
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:215e42c61106ae8f5e7c4a37bf136ca91c5aa58a57b7410ae2fd5f9cd9254993
+  - from: DISC-036
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:b6f10a685456cc26b1c510cb994f273bb19e70d017a1bf0edc27cae1667b960e
+  - from: DISC-037
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:a19fbb850c0d3662cd2e9e1308c5db34dc4161fb7a51e800eace5c2d9947347a
+  - from: DISC-038
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:5e77cef22072ae711fa6ad26bdc02d90c2ff9d8521ef922af031abc87c9d8f8a
+  - from: DISC-039
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:179c2d9e1e277c93c6f6ae4481e19bcdee04c150eb6cd75221fabb2925d0b559
+  - from: DISC-040
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:08bc766586c12dd15b7294aaaafb54b6b07c71ebd0f8293c1cfb984a691d73d3
+  - from: DISC-041
+    to: DD-073
+    reason: "boilerplate pointer, not a relationship — every stub body names DD-073 by construction (FEATURE-002 byline precedent, OBS-014). DD-073 states in prose that it governs all 41; accepting would hang 41 identical inbound edges on it and drown its 8 real ones in traverse, which is the only surface a stub has."
+    source_hash: sha256:753b4fc3801f5c62a5a917658376d2946ed243260dfe0d58fc90b7ec794c0c31
+  - from: DISC-041
+    to: FEATURE-002
+    reason: "third-party narration — the sentence reports that WF-003 was executed as FEATURE-002, and WF-003 declares that edge already"
+    source_hash: sha256:c29954e1073317deead3e638dd4c8f344770254049861674c9cad1f68685633f
+  - from: DISC-041
+    to: OQ-45
+    reason: "third-party narration — the sentence reports that DD-070 decided OQ-45, and DD-070 is already declared here, so traverse reaches it at depth 2"
+    source_hash: sha256:c29954e1073317deead3e638dd4c8f344770254049861674c9cad1f68685633f
+  - from: FRICTION-053
+    to: DD-034
+    reason: "quoted illustration — appears inside a quoted `docdog list` output sample showing that list prints status"
+    source_hash: sha256:ea681f476f095b3bda0184c64ae875c3c687dd7445f1d178823ea75569f39e73
+  - from: FRICTION-053
+    to: DD-052
+    reason: "measurement data point — named as the one already-existing omission, carried over from OBS-027's finding"
+    source_hash: sha256:ea681f476f095b3bda0184c64ae875c3c687dd7445f1d178823ea75569f39e73
+  - from: FRICTION-053
+    to: DD-066
+    reason: "quoted illustration — appears inside EJ-030's quoted banner text"
+    source_hash: sha256:ea681f476f095b3bda0184c64ae875c3c687dd7445f1d178823ea75569f39e73
+  - from: FRICTION-053
+    to: DD-070
+    reason: "quoted illustration — appears inside OQ-18's quoted banner text"
+    source_hash: sha256:ea681f476f095b3bda0184c64ae875c3c687dd7445f1d178823ea75569f39e73
+  - from: FRICTION-053
+    to: EJ-030
+    reason: "quoted illustration — one of three banner samples quoted to show the workaround"
+    source_hash: sha256:ea681f476f095b3bda0184c64ae875c3c687dd7445f1d178823ea75569f39e73
+  - from: FRICTION-053
+    to: FEATURE-002
+    reason: "quoted illustration — appears inside OQ-18's quoted banner text"
+    source_hash: sha256:ea681f476f095b3bda0184c64ae875c3c687dd7445f1d178823ea75569f39e73
+  - from: FRICTION-053
+    to: OQ-18
+    reason: "quoted illustration — one of three banner samples quoted to show the workaround"
+    source_hash: sha256:ea681f476f095b3bda0184c64ae875c3c687dd7445f1d178823ea75569f39e73
+  - from: FRICTION-053
+    to: WF-004
+    reason: "quoted illustration — one of three banner samples quoted to show the workaround"
+    source_hash: sha256:ea681f476f095b3bda0184c64ae875c3c687dd7445f1d178823ea75569f39e73
+  - from: FRICTION-054
+    to: DISC-001
+    reason: "quoted illustration — DISC-001 appears only inside the verbatim index output, narrating an edge between two other records; the record cites the message, not the discussion"
+    source_hash: sha256:1449879352bf7e4eec39b8f46f17cbab2026a268a20ba23315165edbda915fef
+  - from: FRICTION-054
+    to: FRICTION-006
+    reason: "same quoted illustration as DISC-001 — it is the target of the sample edge in the error text, not a record this note is about"
+    source_hash: sha256:1449879352bf7e4eec39b8f46f17cbab2026a268a20ba23315165edbda915fef
+  - from: OBS-003
+    to: PROPOSAL-013
+    reason: "anticipated next-free-number (OBS-011 taxonomy 1) — a projected id that PROPOSAL-013 did not turn out to be"
+    source_hash: sha256:1c2850542db642a9c45c6493240ba128256bf8bcb4a529888a70658ebf85bf8e
+  - from: OBS-003
+    to: PROPOSAL-014
+    reason: "anticipated next-free-number (OBS-011 taxonomy 1) — a projected id that PROPOSAL-014 did not turn out to be"
+    source_hash: sha256:1c2850542db642a9c45c6493240ba128256bf8bcb4a529888a70658ebf85bf8e
+  - from: OBS-010
+    to: PROPOSAL-024
+    reason: "anticipated next-free-number (OBS-011 taxonomy 1) — future-proposal material named by number before PROPOSAL-024 existed"
+    source_hash: sha256:020c3869eedf2c204ff1769782b9b5c4ff05374b9b497524cdc7b63bd5f2fb08
+  - from: OBS-027
+    to: DD-052
+    reason: "measurement data point — named as the one record whose banner is missing; a fact reported about it, not a relationship, and the same rule that keeps the table rows out keeps this out"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: DD-061
+    reason: "measurement data point — a row in the outranking table"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: DD-066
+    reason: "quoted illustration — appears inside EJ-030's quoted banner text, not as a claim this record makes"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: DD-070
+    reason: "quoted illustration — appears inside OQ-18's quoted banner text"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: EJ-020
+    reason: "measurement data point — a member of the 3-record candidate set finding 3 reports"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: EJ-025
+    reason: "measurement data point — a member of the 3-record candidate set finding 3 reports"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: EJ-026
+    reason: "measurement data point — a member of the 3-record candidate set finding 3 reports"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: EJ-030
+    reason: "measurement data point — a row in the outranking table (rank 1 on q02), not a record this observation is about"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: FEATURE-002
+    reason: "quoted illustration — appears inside OQ-18's quoted banner text"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: OQ-18
+    reason: "quoted illustration — one of three banner samples quoted to show the convention"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: OQ-25
+    reason: "measurement data point — a row in the outranking table"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: PROPOSAL-002
+    reason: "measurement data point — a row in the outranking table"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OBS-027
+    to: WF-004
+    reason: "quoted illustration — one of three banner samples quoted to show the convention"
+    source_hash: sha256:18c4e4105b93c5330e391fe6cdec9ab16b1f2caa2986110f52b2f5fec1d20197
+  - from: OQ-45
+    to: PROPOSAL-018
+    reason: "anticipated next-free-number (OBS-011 taxonomy 1) — the number was guessed and PROPOSAL-018 landed elsewhere"
+    source_hash: sha256:4dfdcb0bec5660ba1529b0d90eaf5fedc0ce42c1e8cc5b3da9a72941af73d86e

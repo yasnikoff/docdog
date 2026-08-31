@@ -1,0 +1,82 @@
+name: Friction report
+description: Something docdog does wrong, does confusingly, or will not let you do
+title: "<what happened, in one line>"
+labels: ["friction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The fields below mirror the frontmatter of a docdog friction record,
+        so a report you already wrote locally can be pasted straight in.
+
+        **Before filing**, search closed issues too — a closed one usually
+        means the fix shipped, and `docdog update --check` is the faster
+        answer than waiting for a reply.
+
+        Please quote only the minimum that reproduces the problem. Record
+        ids, titles and paths from your corpus become public here.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened, in one sentence
+      placeholder: "docdog update writes the .gitattributes block but never registers the driver."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Your experience of it. Triage may re-judge it against the backlog.
+      options:
+        - blocks-work
+        - inconvenient
+        - cosmetic
+    validations:
+      required: true
+
+  - type: textarea
+    id: trying
+    attributes:
+      label: What you were trying to do
+      description: The task, not the command. It is often where the real gap is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and actual output
+      description: The smallest command sequence that shows it, with the real output.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you did instead
+      description: Leave blank if you were stuck. "Nothing, I was blocked" is useful information.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: "Paste the output of `docdog status --json` — its `install` block carries the version and how docdog is installed. Redact anything you would rather not publish; collection names are the usual candidate. If the project has no cache, the command still prints the install block, and that is worth pasting."
+      render: json
+    validations:
+      required: true
+
+  - type: input
+    id: install
+    attributes:
+      label: How docdog is installed
+      description: Only if the environment block above is missing or redacted — `install.shape` in that JSON already answers this.
+      placeholder: "npx via .mcp.json / npm i -g / project devDependency / source checkout"
+
+  - type: textarea
+    id: expectation
+    attributes:
+      label: What should change
+      description: Optional, and welcome. A wrong guess about the cause is still a useful signal about the symptom.

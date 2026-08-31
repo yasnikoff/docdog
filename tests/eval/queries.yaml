@@ -1,0 +1,223 @@
+# Frozen retrieval-eval query set — v1 (2026-07-11, v3 session 7)
+#
+# Purpose: P-023 §7 step 7 / DD-070 §8's "measured retrieval win". This set is
+# FROZEN: judging what counts as a gold answer is agent+user work (DP-001) and
+# was done once, here; runs against this file are mechanical and comparable
+# across time. Do not edit casually — a changed query set breaks comparability.
+# Extend by appending (bump the version note above) rather than rewording.
+#
+# Provenance: queries are mined from real agent usage of this corpus —
+# session-handoff "first commands", WF-006's survey/theme query menu, OBS-005's
+# recorded retrieval miss, OBS-009's recorded live query, and the corpus's own
+# DISC/OQ/FRICTION questions rephrased from the asking side (how an agent asks
+# BEFORE knowing the answer record's title, not an echo of the title).
+#
+# Fields:
+#   query    — natural-language question as an agent would pose it
+#   gold     — record ids that answer it, directly or one obvious hop away
+#              (a hit on ANY gold counts; sets kept to 1-3, verified against
+#              the live corpus 2026-07-11, 249 vertices)
+#   category — decision-lookup | semantic | lineage | friction | vocab |
+#              process | question-lookup
+#   note     — why the gold is the gold
+queries:
+  - id: q01
+    query: "which decision made disk files the source of truth instead of the database"
+    gold: [DD-070, PROPOSAL-023]
+    category: decision-lookup
+    note: "DD-070 commitment 2; P-023 is its storage spec"
+  - id: q02
+    query: "why was the workflow engine removed from docdog"
+    gold: [DD-070, DD-066]
+    category: decision-lookup
+    note: "DD-070 commitment 1 enforces DD-066"
+  - id: q03
+    query: "should docdog execute process steps itself or just store the process documents"
+    gold: [DD-066, EJ-030, CONCEPT-COLLECTION-WORKFLOWS]
+    category: semantic
+    note: "memory layer, not workflow engine; EJ-030 is the superseded original; the workflows concept record states it directly ('agents read and follow them; docdog stores and serves') — added pre-freeze after the first run showed it ranked #1 and genuinely answers"
+  - id: q04
+    query: "are cross-record relationships inferred from prose or declared somewhere"
+    gold: [DD-043]
+    category: decision-lookup
+    note: "relationships come from frontmatter blocks, not agentic extraction"
+  - id: q05
+    query: "what did we replace ArangoDB with"
+    gold: [DD-070, PROPOSAL-023]
+    category: decision-lookup
+    note: "embedded SQLite cache (FTS5 + vectors)"
+  - id: q06
+    query: "does reindexing recompute embeddings for unchanged files"
+    gold: [DD-051, EJ-015]
+    category: decision-lookup
+    note: "embedding cache keyed by content hash"
+  - id: q07
+    query: "can docdog work in a project that doesn't use git"
+    gold: [DD-050, EJ-014]
+    category: semantic
+    note: "git-optional three-tier ladder"
+  - id: q08
+    query: "who is responsible for writing the description field on a record"
+    gold: [DD-059, EJ-023]
+    category: decision-lookup
+    note: "description is agent-authored; preview is the mechanical fallback"
+  - id: q09
+    query: "why do some collection names start with dd_"
+    gold: [DD-060, EJ-024]
+    category: decision-lookup
+    note: "dd_ reserves the system namespace"
+  - id: q10
+    query: "can the same section file be included in two different parent documents"
+    gold: [DD-054, EJ-018]
+    category: semantic
+    note: "no multi-inclusion; multi-path discovery is the graph's job"
+  - id: q11
+    query: "where do process documents like release procedures belong"
+    gold: [DD-036, CONCEPT-COLLECTION-WORKFLOWS]
+    category: decision-lookup
+    note: "workflows collection under .docdog/workflows/"
+  - id: q12
+    query: "how does docdog know whether a repository has opted in"
+    gold: [DD-035]
+    category: semantic
+    note: ".docdog/ folder is the opt-in marker"
+  - id: q13
+    query: "if docdog is uninstalled tomorrow can agents still make sense of the specs"
+    gold: [DD-034, DD-035, "default:.docdog/skills/ejection-resilience.md"]
+    category: semantic
+    note: "artifact-resilience: frontmatter + bodies carry everything"
+  - id: q14
+    query: "what superseded EJ-030"
+    gold: [EJ-030, DD-066]
+    category: lineage
+    note: "DD-066 mirrors it; landing on either resolves the lineage"
+  - id: q15
+    query: "which decisions did DD-070 supersede"
+    gold: [DD-070]
+    category: lineage
+    note: "DD-070 carries the frozen supersession set in its own frontmatter"
+  - id: q16
+    query: "is the two-tier published versus working content model still current"
+    gold: [DD-065, DD-070, EJ-029]
+    category: lineage
+    note: "DD-065 (superseded) collapsed by DD-070; EJ-029 is the EJ original"
+  - id: q17
+    query: "do we still do schema migrations"
+    gold: [DD-062, DD-070, EJ-026]
+    category: lineage
+    note: "forward-only migrations died; disposable cache drops and rebuilds"
+  - id: q18
+    query: "changing a record's collection in frontmatter didn't move it on reindex"
+    gold: [FRICTION-006, DISC-001, API-IMPROVEMENT-001]
+    category: friction
+    note: "the collection-move friction and its investigation/proposal"
+  - id: q19
+    query: "status filter returned stale results after a frontmatter-only edit"
+    gold: [FRICTION-015]
+    category: friction
+    note: "denormalized columns not refreshed on body-unchanged edits"
+  - id: q20
+    query: "a shipped collection name clashed with the host project's own terminology"
+    gold: [FRICTION-010, DD-035]
+    category: friction
+    note: "workflows-name collision; DD-035's path-based namespacing is the fix"
+  - id: q21
+    query: "several files ended up with the same id after stamping frontmatter"
+    gold: [FRICTION-005]
+    category: friction
+    note: "docdog add id inference collision on date-prefixed filenames"
+  - id: q22
+    query: "CLI crashed with a raw stack trace instead of a clean error"
+    gold: [FRICTION-004]
+    category: friction
+    note: "unhandled-promise-rejection dumps"
+  - id: q23
+    query: "when should I use the supersedes relation instead of references"
+    gold: [CONCEPT-RELATION-SUPERSEDES]
+    category: vocab
+    note: "the relation concept record carries when-to-use guidance"
+  - id: q24
+    query: "which collection do bug reports and limitations go in"
+    gold: [CONCEPT-COLLECTION-ISSUES]
+    category: vocab
+    note: "issues collection (FRICTION-NNN)"
+  - id: q25
+    query: "what relation links a task to the process document it executes"
+    gold: [CONCEPT-RELATION-FOLLOWS-WORKFLOW]
+    category: vocab
+    note: "follows_workflow"
+  - id: q26
+    query: "how do I turn a design conversation into a permanent record"
+    gold: [WF-001]
+    category: process
+    note: "discussion capture workflow"
+  - id: q27
+    query: "what's the procedure for renaming a large cohort of records"
+    gold: [WF-003]
+    category: process
+    note: "docs batch rewrite"
+  - id: q28
+    query: "when working on a task should I also be testing docdog's retrieval and logging what I notice"
+    gold: [WF-002]
+    category: process
+    note: "dual-track dogfooding"
+  - id: q29
+    query: "how do I work through the backlog of open friction reports"
+    gold: [WF-006]
+    category: process
+    note: "friction resolve workflow"
+  - id: q30
+    query: "how do I bring a folder of existing markdown notes into the graph"
+    gold: ["default:.docdog/skills/ingest.md", DD-064, EJ-028]
+    category: process
+    note: "ingest skill; split/stamp live in core per DD-064"
+  - id: q31
+    query: "what are the rules for features that aren't part of the core"
+    gold: [FR-001]
+    category: decision-lookup
+    note: "opt-in, applicability-detectable, own namespace"
+  - id: q32
+    query: "which principle says code must not make semantic judgments"
+    gold: [DP-001]
+    category: decision-lookup
+    note: "agent-first mechanics"
+  - id: q33
+    query: "where must the meaning of a collection or relation type be recorded"
+    gold: [DP-002]
+    category: decision-lookup
+    note: "concepts carry their own meaning in the graph"
+  - id: q34
+    query: "am I allowed to query the underlying database directly"
+    gold: [DP-003]
+    category: decision-lookup
+    note: "escape hatch allowed; toolbelt expected to cover common cases"
+  - id: q35
+    query: "was watch mode or automatic reindex on file change ever considered"
+    gold: [OQ-41]
+    category: question-lookup
+    note: "docdog watch open question"
+  - id: q36
+    query: "what's still unresolved about dd_patches"
+    gold: [OQ-26]
+    category: question-lookup
+    note: "skill patches vs git patches scope"
+  - id: q37
+    query: "did we evaluate LangGraph or XState instead of building our own workflow primitives"
+    gold: [DISC-015]
+    category: question-lookup
+    note: "external workflow-lib review"
+  - id: q38
+    query: "that time search couldn't find the decision-numbering agreement from a previous session"
+    gold: [OBS-005]
+    category: semantic
+    note: "the recorded retrieval miss (EJ→DD switch lived only in conversation)"
+  - id: q39
+    query: "has anyone assessed whether docdog actually improves context quality or saves tokens"
+    gold: [OBS-001]
+    category: semantic
+    note: "the initial self-assessment covers exactly this"
+  - id: q40
+    query: "which known problems involve the indexer"
+    gold: [FRICTION-006, FRICTION-009, FRICTION-015]
+    category: friction
+    note: "WF-006-style theme survey; any indexer friction in top k counts"

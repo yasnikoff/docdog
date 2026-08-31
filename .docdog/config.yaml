@@ -1,0 +1,28 @@
+project:
+  name: docdog
+scan_paths:
+  - specs/
+  - .docdog/skills/
+  - .docdog/workflows/
+  - .docdog/observations/
+  - .docdog/reconciliations/
+  - .docdog/concepts/
+  - tasks/
+  - CONTRIBUTING.md
+vertex_collections:
+  - questions
+  - issues
+  - proposals
+  - discussions
+  - observations
+default_collection: notes
+git:
+  enabled: true
+  canonical_branch: main
+embed:
+  provider: onnx
+  model: nomic-ai/nomic-embed-text-v1
+  ollama_url: http://localhost:11434
+search:
+  preview_length: 600
+template: workflows
