@@ -22,13 +22,21 @@ relationships:
     context: "classification here is judgment, done by a person reading an issue; nothing in this workflow may become an auto-labeller"
   - follows_workflow: WF-006
     context: "composes with the friction drain — WF-007 step 5 hands off, WF-006 owns the fix"
+  - references: DISC-042
+    context: "the first run of this workflow (issue #1); steps 2 and 4 and the trigger were amended from what it found"
+  - references: FRICTION-055
+    context: "the rule behind step 4's measure-before-posting: a claim about behaviour on someone else's machine is a claim about the outside world"
 ---
 
 # WF-007: External feedback triage
 
 ## Trigger
 
-An issue exists on `yasnikoff/docdog` that this repo did not write.
+An issue exists on `yasnikoff/docdog` that was filed from **someone
+else's machine** — which includes the maintainer's own other projects.
+Issue #1 came from the same account as this repo; what made it external
+was a corpus this checkout has never seen, and that is the property the
+steps below depend on.
 Sweep at three moments: on notification, before cutting a release, and
 whenever the friction backlog is being drained anyway (WF-006 step 1).
 
@@ -48,7 +56,22 @@ Including the environment block (`docdog status --json`, per the issue
 template). Version and install shape decide half the outcomes below
 before the defect is even understood.
 
-### 2. Classify
+### 2. Classify — each ask, not the issue
+
+An issue is not one reading. Split it into its asks — the reporter's own
+numbering where they gave one — plus anything triage itself turns up, and
+classify each against the table. The issue's outcome is the set of its
+asks' outcomes, and it closes when the last one does.
+
+Issue #1 was one row read whole (a feature request → a discussion) and
+six read ask by ask: two asks already met (answered), one false premise
+needing a design change (a proposal), one needing a separate design
+question (an open question), and two defects it never mentioned — the
+route that already worked was undocumented where a markdown user would
+look (FRICTION-056, a docs friction), and overlapping scan entries would
+have blocked any route (FRICTION-057). Classifying the whole issue
+would have filed the answerable parts under a discussion and left them
+waiting on the design parts.
 
 | Reading | Outcome |
 |---|---|
@@ -82,14 +105,40 @@ Two judgment calls belong to the maintainer, not the reporter:
   reproduction verbatim and nothing else.
 
 The issue is public, so nothing in it is a leak risk when copied — but
-the corpus ships whole (DD-071), so do not add private inference about
-the reporter's project either.
+friction records ship whole (DD-071), so do not add private inference
+about the reporter's project either. A discussion ships as a stub
+(DD-073) with its reasoning in the private repo; the relationships block
+is public in both halves, so its contexts follow the same rule.
 
 ### 4. Acknowledge — the step that must not be skipped
 
 Comment naming the record id and what happens next. The reporter learns
-their report landed, and they get an id they can cite in the corpus that
-ships inside the package they already have.
+their report landed, and they get an id they can cite.
+
+That id is not in the package they already have — a record admitted
+today ships in the next release. Before posting, check that every id the
+comment cites is readable on public `main` (re-measure, FRICTION-055), or
+say in the comment where it will appear.
+
+**Everything the comment asserts about docdog's behaviour is run before
+it is posted, not read from the code.** Code offered to the reporter goes
+through a throwaway project on the version they have installed, with a
+fixture shaped like their corpus — CRLF included if their environment
+says Windows. A behaviour claim gets the same treatment. Issue #1's first
+draft was wrong four ways, all of them caught this way and none by
+reading: the sketch filed every row under the wrong collection
+(FRICTION-058), split inside fenced code, and a fix to it silently did
+not apply (FRICTION-059); and the draft's account of overlapping scan
+entries, derived from the code, was contradicted by the first run
+(FRICTION-057). A reporter who runs our wrong code learns not to trust
+the next answer.
+
+Then read the draft once against the issue's own words: every "this
+meets ask N" checked against what ask N actually says. The first draft
+claimed an ask its own §3 said was unmet.
+
+The comment is public and permanent. An agent drafts it; the maintainer
+approves the post.
 
 An issue left silent for weeks is worse than one declined in a sentence.
 Declining is information; silence teaches people to stop reporting.
@@ -135,10 +184,13 @@ whether upgrading helps.
 
 ## Notes
 
-- **Unexercised.** Written before the first external issue existed, from
-  PROPOSAL-043's design. Expect the table in step 2 to be wrong in at
-  least one row and amend it after the first real sweep rather than
-  defending it.
+- **Exercised once** — issue #1, 2026-09-25, recorded in DISC-042.
+  Written before any external issue existed, from PROPOSAL-043's design,
+  with a note to expect amendment after the first real sweep. The table's
+  rows survived; what did not was classifying the issue as a unit (step
+  2), the assumption that a new id is already in the reporter's package,
+  and the absence of any rule that the reply be tested (step 4). Expect a
+  second sweep to find something else.
 - Triage cadence is the maintainer's; the only hard rule is that the
   sweep happens before a release, because a fix that ships without its
   issue being closed strands the person who found it.

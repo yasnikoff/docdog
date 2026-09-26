@@ -19,9 +19,13 @@ relationships:
     context: DP-001 check
   - references: FRICTION-055
     context: "the general shape this record instantiated — an audit line that was true when written, read seven weeks later as a statement of the present"
+  - references: DISC-042
+    context: "the first push to public main that was not a release (1602493, 2026-09-25), made so the records cited in issue #1's acknowledgment could be read; the 2026-09-27 amendment makes that a rule rather than a precedent"
+  - references: WF-007
+    context: "step 4 checks that every id an acknowledgment cites is readable on public main — the consumer of the between-releases push this record now permits"
   - references: DD-073
     context: "the amendment to clause 2 — discussions ship as stubs rather than whole, because the eval argument turns out to be two queries in forty and the dogfood argument does not reach a transcript"
-description: "How docdog goes public, decided 2026-07-11 after a full audit. (1) The public history starts at publication: a fresh cut of the current tree — the full development history is never pushed, because it contains docs/discussion.md (explicitly gitignored as private) from the v1 era; it stays local as the DD-039 archive. (2) The specs corpus ships whole, no curation: it is the dogfood evidence, and the frozen retrieval-eval gold sets (tests/eval/queries.yaml) reference corpus records by id — curating would break the shipped eval and falsify OBS-010's numbers. (3) The private host-project name is genericized to host-project placeholders in the shipping worktree; generic role nouns like 'orchestrator' stay. (4) No leak-detection pipeline — this was DD-038's ad-hoc review, run once. AMENDED same day: the audit's claim that docs/discussion.md had been removed from the worktree was false — it was still tracked in HEAD (gitignore is inert for tracked files); fixed with git rm --cached so the fresh cut cannot ship it. Reliable sweep for this trap: git ls-files -i -c --exclude-standard. AMENDED 2026-07-20: the open registry question is closed — npmjs (registry.npmjs.org) as @yasnikoff/docdog, because GitHub Packages requires auth even for public installs, which would break the npx wiring docdog init writes into every adopter's .mcp.json; unscoped docdog and a @docdog org were both checked and rejected (squatted / brand mismatch). .npmrc deleted, HANDOFF-*.md untracked+gitignored. AMENDED 2026-08-31: clause 2 gains one exception (DD-073) — the 41 discussion records ship as STUBS carrying id, title, status, date and the full relationship graph, with bodies and descriptions moved to a private sibling repo; the eval ground for ships-whole was 2 of 40 golds and both still resolve, and the stub is what keeps the 117 inbound edges from dangling. Clause 1 is now load-bearing for a second reason: the full bodies live only in this repo's local history."
+description: "How docdog goes public, decided 2026-07-11 after a full audit. (1) The public history starts at publication: a fresh cut of the current tree — the full development history is never pushed, because it contains docs/discussion.md (explicitly gitignored as private) from the v1 era; it stays local as the DD-039 archive. (2) The specs corpus ships whole, no curation: it is the dogfood evidence, and the frozen retrieval-eval gold sets (tests/eval/queries.yaml) reference corpus records by id — curating would break the shipped eval and falsify OBS-010's numbers. (3) The private host-project name is genericized to host-project placeholders in the shipping worktree; generic role nouns like 'orchestrator' stay. (4) No leak-detection pipeline — this was DD-038's ad-hoc review, run once. AMENDED same day: the audit's claim that docs/discussion.md had been removed from the worktree was false — it was still tracked in HEAD (gitignore is inert for tracked files); fixed with git rm --cached so the fresh cut cannot ship it. Reliable sweep for this trap: git ls-files -i -c --exclude-standard. AMENDED 2026-07-20: the open registry question is closed — npmjs (registry.npmjs.org) as @yasnikoff/docdog, because GitHub Packages requires auth even for public installs, which would break the npx wiring docdog init writes into every adopter's .mcp.json; unscoped docdog and a @docdog org were both checked and rejected (squatted / brand mismatch). .npmrc deleted, HANDOFF-*.md untracked+gitignored. AMENDED 2026-08-31: clause 2 gains one exception (DD-073) — the 41 discussion records ship as STUBS carrying id, title, status, date and the full relationship graph, with bodies and descriptions moved to a private sibling repo; the eval ground for ships-whole was 2 of 40 golds and both still resolve, and the stub is what keeps the 117 inbound edges from dangling. Clause 1 is now load-bearing for a second reason: the full bodies live only in this repo's local history. AMENDED 2026-09-27: public main is the latest published cut of v3's tree, not a release line — releases are the v* tags, which alone trigger publishing; a between-releases cut to main is allowed when it makes a cited record readable, built the same way (commit-tree v3^{tree} -p origin/main, never v3 history). No develop branch: the default branch is where a reporter looks up a cited id, and cuts share no history to merge."
 ---
 
 # DD-071: Publication boundary
@@ -222,6 +226,54 @@ their protection rules.
 The general failure is FRICTION-055: a record can carry a claim about
 the world outside the corpus, and nothing — not `status`, not the
 index, not the reader — can notice when the world has moved.
+
+## Amendment (2026-09-27): public `main` is the latest cut, and the tags are the releases
+
+**Public `main` holds the latest published cut of v3's tree. A release
+is a `v*` tag.** Nothing here ever said `main` was a release line; it
+looked like one because the first two cuts after the recreation
+(`60d9131`, `6d46f90`) were both releases. The first cut that was not —
+`1602493`, 2026-09-25, docs only — was pushed so that the records
+issue #1's acknowledgment cites could be read, and it raised the
+question of whether that broke a rule. It did not; this makes the rule
+explicit so the next one does not have to ask.
+
+**What makes this safe is that publishing keys on tags.** As measured
+2026-09-27, the publish workflow triggers only on `push: tags: v*`, and
+its run history holds exactly the two release runs — the `1602493` push
+started nothing. Re-measure before relying on that (FRICTION-055): a
+workflow that someday also triggers on `push: branches: main` turns
+every docs cut into a release.
+
+**When to cut between releases:** when a record someone outside this
+checkout is told to read would otherwise not be readable — in practice,
+WF-007 step 4's check before an acknowledgment is posted. Not on a
+schedule and not per commit; a between-releases cut is a publication,
+and each one gets the review below.
+
+**How — unchanged from every other cut, and that is the point.** Clause
+1 holds: v3 history is never pushed, because it carries the full
+discussion bodies (DD-073) and, before them, `docs/discussion.md`.
+
+```
+git commit-tree "v3^{tree}" -p origin/main -m "<message>"
+git push origin <sha>:refs/heads/main
+```
+
+Before the push: the tree diff against `origin/main` is what you expect
+and nothing else; any discussion file in it is a stub (no
+`description`, the retained-privately body); no private host-project
+name and no local path appears in it (clause 3).
+
+**No `develop` branch.** Considered and refused on two grounds. The
+default branch is where a reporter goes to look up an id they were
+given, so a cut that makes a record readable belongs on it — a
+`develop` holding it would have to become the default, leaving `main`
+to restate what the tags already say. And the usual payoff of the
+split, merging develop into main at release, does not exist here: cuts
+are made by `commit-tree` from a tree that shares no history with
+either branch, so there is nothing to merge and a second branch is a
+second line of cuts to keep in step.
 
 ## DP-001 check
 

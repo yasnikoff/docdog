@@ -30,6 +30,12 @@ relationships:
     context: "the refusal a reader will pattern-match onto this; it does not bind, because its mechanism assumes the record is one idea and this is many records sharing one vector"
   - references: OBS-024
     context: "why the status quo looks like it works on such a corpus — FTS covers the body and hands back the file — and why the vector leg is blind rather than weak"
+  - references: OBS-023
+    context: "the instrument the baseline runs on; its external runner pins path-mode golds, which cannot tell a row from its file, so it needs an id mode first"
+  - references: FRICTION-058
+    context: "the baseline's row arm is the script route, and a script must apply its entry's collection itself until this is fixed"
+  - references: FRICTION-059
+    context: "why the row arm indexes with --full: an edit to the script does not invalidate the parse it produced"
 ---
 
 # PROPOSAL-048: record patterns anchored to markdown nodes
@@ -153,9 +159,11 @@ mutual declaration, not against the key.
   documentation only — which is precisely FRICTION-056's problem
   recurring one feature later, and the reason the docs fix should land
   first or alongside.
-- **Blocked in practice by FRICTION-057.** Three files needing patterns
-  inside a default-parsed directory is unusable until a file entry
-  overrides a directory entry instead of racing it.
+- **Blocked in practice by FRICTION-057** — and so is the script route
+  that works today, which is measured rather than inferred: an overlapped
+  file flips between its two parses on every run. Three files needing
+  patterns inside a default-parsed directory is unusable until a file
+  entry overrides a directory entry instead of racing it.
 - **An enum that grows by request is a slow interface.** Accepted: the
   alternative is a selector language, and DP-001 tier 3 is where that
   ends up.
@@ -169,8 +177,78 @@ overturned a retrieval intuition, and OBS-020's lesson is that an
 aggregate cannot tell you a design is succeeding for the opposite of its
 stated reason.
 
-The instrument exists: `tests/eval/run-external-eval.ts --root <project>`
-(OBS-023), and the reporter has offered their corpus. Measure
-**before/after on their queries**, and measure the **mechanism** — the
-gold record's cosine to its own query, absolutely, not just MRR
-(OBS-019).
+### The baseline does not need this proposal built
+
+The row arm exists at 0.4.0: `parser: script` with the script posted on
+issue #1 produces one record per row, id from the text, one vector each —
+the same output this key would produce. So the retrieval claim is testable
+**now**, and this proposal's own test shrinks to equivalence (below).
+Building the matcher first and measuring after would spend the design
+work before learning whether it buys anything.
+
+Two arms on the reporter's corpus, same query set, same embed recipe:
+
+- **A — status quo.** Zero config beyond `scan_paths`; the file is one
+  default-parsed record.
+- **B — rows.** `design-decisions.md` under `parser: script`, and the
+  arm's config **enumerates entries so that no two overlap**, because
+  FRICTION-057 would otherwise alternate the file between A's parse and
+  B's on successive runs and the arm would measure whichever run it
+  happened to be. Index with `--full` (FRICTION-059). The script applies
+  the entry's collection itself (FRICTION-058).
+
+### The instrument, as shipped, cannot see the claim
+
+`run-external-eval.ts` hard-codes `goldMode: "path"`, and path mode
+expands a gold to *every record its file holds*. Against a row question
+with the file as gold, arm A scores a hit when the file comes back and
+arm B scores a hit when **any** of its 261 rows comes back. Both arms
+answer "the file", neither is asked "the row", and the comparison measures
+nothing this proposal claims. That is the OBS-013 Q22 shape again — a
+config fact scored as a retrieval fact.
+
+The engine already has `goldMode: "id"` (the self-corpus runner uses it),
+so the fix is a `--gold-mode` flag on the external runner; test tooling,
+not shipped surface. Then, per arm:
+
+1. **Row questions, row-id golds, arm B** — the number ask 4 is about:
+   is the right row ranked, among its 260 siblings and the rest of the
+   corpus. Arm A cannot be scored here; it has no row records. That is the
+   finding, not a gap in the method, and it is reported as such rather
+   than as a zero.
+2. **Row questions, path golds, both arms** — does the right *file* come
+   back at all. Arm A's best case. If B loses here, splitting hurt
+   something even at file grain.
+3. **Control questions, golds in other files (the 509 log entries), both
+   arms** — the regression check. 261 new records compete for the same
+   top-10; a design that finds rows by crowding out everything else is
+   not a win.
+4. **The mechanism, absolutely (OBS-019).** For each row question, the
+   gold's cosine to its query: B's row vector against A's file vector.
+   Split the rows by whether their text lies inside the first 8,000
+   characters of the file.
+
+**Written down before it runs**, so the result can contradict it: rows
+past the cap should show A's cosine flat and query-independent (blind,
+OBS-024's mechanism) and B's responsive; rows inside the cap may tie in
+(4) and still differ in (1). If B's row MRR is low *and* its cosines are
+responsive, the loss is ranking among near-identical siblings, not
+embedding — a different problem from the one this proposal solves.
+
+The query set is frozen **before** arm B is indexed, by the reporter if
+they will write it: they know what they look rows up to find, and we
+would write questions shaped by the parse we just built. Golds are row
+ids for row questions and paths for control questions; the report stays
+off this repo (DD-071), aggregates only.
+
+### What this proposal then owes
+
+An **equivalence test**, not a retrieval one: on the reporter's file,
+`record_pattern` and the script produce the same section set — ids,
+titles, content boundaries. Equal means B's numbers are this key's
+numbers. They are expected to differ in known places and the test should
+report the diff, not assert it away: the script is line-based with fence
+tracking, the key is mdast-anchored, so they part on nested or indented
+items, list items inside blockquotes, and any fence its simple opener/closer
+match misreads. Each difference is either a defect in the script
+(tell the reporter) or a reason this key is worth building over it.
