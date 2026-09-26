@@ -2,9 +2,11 @@
 id: FRICTION-056
 title: "The escape hatch that answers a declined adoption is documented once, at the bottom of one skill, under a heading about foreign file formats"
 collection: notes
-status: open
+status: resolved
+fixed_date: 2026-09-27
+resolution_approach: fix
 date: 2026-09-25
-description: "`parser: script` already solves the sub-file-record case that issue #1 declined adoption over, and the reporter never found it: it appears in exactly one adopter-visible place — the last section of the `ingest` skill — framed as `custom formats → project scripts (table-based glossaries, CSV exports, Confluence dumps)`, which a reader with a markdown problem does not read as addressed to them. The README does not mention parsers at all."
+description: "RESOLVED 2026-09-27. `parser: script` already solves the sub-file-record case that issue #1 declined adoption over, and the reporter never found it: it appears in exactly one adopter-visible place — the last section of the `ingest` skill — framed as `custom formats → project scripts (table-based glossaries, CSV exports, Confluence dumps)`, which a reader with a markdown problem does not read as addressed to them. The README does not mention parsers at all."
 severity: inconvenient
 upstream_issue: https://github.com/yasnikoff/docdog/issues/1
 relationships:
@@ -91,3 +93,25 @@ so the script is unnecessary (PROPOSAL-048). That is a separate decision,
 and this record is true whichever way it goes — the escape hatch will
 always be the answer for *some* corpus, and it will always need to be
 findable.
+
+## Resolution (2026-09-27)
+
+Both halves, as prose (item 3).
+
+- **The `ingest` skill is organised by capability now.** The section is
+  *Records that are not headings → a script parser*, and it comes before
+  the file-producing `docdog run` scripts, which keep the glossary/CSV/
+  Confluence framing because that is what they are for. It carries a
+  working script for list-item rows — fence-aware, since FRICTION-039's
+  defect was in our own first sketch — and states the three guarantees
+  that FRICTION-057/058/059 made true in the same change, so the advice
+  and the behaviour shipped together. The example was run as extracted
+  from the file, standalone and through the built CLI, before commit.
+  Template edited, copied down (FRICTION-051).
+- **The README says a file can hold many records**, in *How it works*
+  beside the record example: `split` for heading-delimited units,
+  `script` for anything else, the file never rewritten, a file entry
+  overriding its directory. One paragraph, pointing at the skill.
+
+Not claimed: that this would have been found. The test of that is the
+next adopter with a non-heading corpus, and there is no instrument for it.

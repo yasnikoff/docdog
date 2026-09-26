@@ -19,6 +19,7 @@ import type { DocdogConfig, ScanPathConfig, ScanPathEntry } from "../types/confi
 import { getVertexCollections, getDefaultCollection } from "../config/collections.js";
 import { normalizeScanPath } from "../config/defaults.js";
 import { getParser } from "./parsers/index.js";
+import { parserScriptHash } from "./parsers/script.js";
 import type { ParsedSection } from "./parsers/types.js";
 import { parse as parseMarkdown } from "../markdown/index.js";
 
@@ -57,7 +58,18 @@ export async function discoverAndParseAll(
   scanPaths: ScanPathEntry[],
   config: DocdogConfig,
 ): Promise<ParsedFile[]> {
+  // Refused before anything is read: two entries naming one path with two
+  // parser configs is a contradiction, not a precedence question, and
+  // indexing either reading would be docdog choosing one (FRICTION-057).
+  assertNoConflictingScanEntries(config.scan_paths ?? []);
+  assertNoConflictingScanEntries(scanPaths);
+
   const parsedFiles: ParsedFile[] = [];
+  // A file reached by two entries is parsed ONCE. Before FRICTION-057 each
+  // entry parsed it with its own config, both results carried one
+  // repoRelPath, and the indexer's per-path reconcile made them delete each
+  // other's rows — the file flipped between its two parses on every run.
+  const seen = new Set<string>();
 
   for (const entry of scanPaths) {
     const pathConfig = normalizeScanPath(entry);
@@ -81,12 +93,89 @@ export async function discoverAndParseAll(
     }
 
     for (const filePath of files) {
-      const parsed = await parseFile(filePath, projectRoot, pathConfig, config);
+      const repoRelPath = relative(projectRoot, filePath).split(sep).join("/");
+      if (seen.has(repoRelPath)) continue;
+      seen.add(repoRelPath);
+      const governing = governingScanEntry(config.scan_paths ?? [], repoRelPath) ?? pathConfig;
+      const parsed = await parseFile(filePath, projectRoot, governing, config);
       if (parsed) parsedFiles.push(parsed);
     }
   }
 
   return parsedFiles;
+}
+
+/**
+ * The scan entry whose parser config governs a file: the most specific
+ * configured entry covering it (FRICTION-057). Longest matching path wins,
+ * so a file entry beats a directory entry and a deeper directory beats a
+ * shallower one — which is what makes "this one file is different" an
+ * OVERRIDE of the directory's rule rather than a second, racing reading of
+ * the file. List order plays no part. Pure prefix mechanics (DP-001 tier 1):
+ * the author declared both entries; nothing here guesses which was meant.
+ *
+ * Resolved against the CONFIGURED entries, not the ones a run was handed:
+ * `index --path spec/` names a scope, not a parser, and must parse
+ * `spec/decisions.md` the way a full index does. A file no configured
+ * entry covers returns null and the caller keeps the entry that found it
+ * (a `--path` outside config, or the implicit `.docdog/local/`).
+ *
+ * The overlap is not reported. Under a specificity rule it is the normal way
+ * to say "this one is different", and a warning about the normal case is a
+ * warning that gets turned off.
+ */
+export function governingScanEntry(
+  scanPaths: ScanPathEntry[],
+  repoRelPath: string,
+): ScanPathConfig | null {
+  const file = canonicalScanPath(repoRelPath);
+  let best: ScanPathConfig | null = null;
+  let bestLen = -1;
+  for (const raw of scanPaths) {
+    const entry = normalizeScanPath(raw);
+    const prefix = canonicalScanPath(entry.path);
+    const covers = prefix === "" || file === prefix || file.startsWith(`${prefix}/`);
+    if (!covers || prefix.length <= bestLen) continue;
+    best = entry;
+    bestLen = prefix.length;
+  }
+  return best;
+}
+
+/**
+ * Two entries naming the same path with different parser config. An
+ * identical duplicate is harmless and passes; a differing one is refused
+ * by name, both configs quoted, since which was meant is not in the file
+ * (FRICTION-057's tie rule, FRICTION-038's refusal shape).
+ */
+export function assertNoConflictingScanEntries(scanPaths: ScanPathEntry[]): void {
+  const byPath = new Map<string, { declared: string; signature: string }>();
+  for (const raw of scanPaths) {
+    const entry = normalizeScanPath(raw);
+    const key = canonicalScanPath(entry.path);
+    const signature = parserSignature(entry);
+    const prior = byPath.get(key);
+    if (!prior) {
+      byPath.set(key, { declared: entry.path, signature });
+      continue;
+    }
+    if (prior.signature !== signature) {
+      throw new Error(
+        `scan_paths declares "${entry.path}" twice with different parser config ` +
+          `(${prior.signature} vs ${signature}) — docdog will not pick one. ` +
+          `Keep one entry for that path in .docdog/config.yaml.`,
+      );
+    }
+  }
+}
+
+/** `./spec/`, `spec\` and `spec` are one path. Repo-relative, forward-slashed. */
+function canonicalScanPath(path: string): string {
+  return path
+    .replace(/\\/g, "/")
+    .replace(/^(\.\/)+/, "")
+    .replace(/\/+$/, "")
+    .replace(/^\.$/, "");
 }
 
 /**
@@ -219,7 +308,7 @@ export async function parseFile(
   const fileHash = `sha256:${createHash("sha256")
     .update(raw)
     .update("\u0000")
-    .update(parserSignature(parserConfig))
+    .update(parserSignature(parserConfig, projectRoot))
     .digest("hex")}`;
 
   const warnings: string[] = [];
@@ -292,10 +381,17 @@ export async function parseFile(
  * (`specs/`) and by its own path during a single-file reindex, and those two
  * must hash identically or every write would look like a config change.
  */
-function parserSignature(parserConfig: ScanPathConfig): string {
+function parserSignature(parserConfig: ScanPathConfig, projectRoot?: string): string {
   const { path: _path, ...rest } = parserConfig;
   const keys = Object.keys(rest).sort();
-  return JSON.stringify(keys.map((k) => [k, (rest as Record<string, unknown>)[k]]));
+  const pairs: Array<[string, unknown]> = keys.map((k) => [k, (rest as Record<string, unknown>)[k]]);
+  // A script entry's config names its parser and does not contain it, so the
+  // script's text joins the signature — editing it dirties exactly the files
+  // this entry governs (FRICTION-059, FRICTION-021's semantics extended).
+  if (projectRoot && parserConfig.parser === "script" && parserConfig.script) {
+    pairs.push(["(script sha256)", parserScriptHash(projectRoot, parserConfig.script)]);
+  }
+  return JSON.stringify(pairs);
 }
 
 // Aliases for common directory names → collection names

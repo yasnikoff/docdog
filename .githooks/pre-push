@@ -1,0 +1,81 @@
+#!/bin/sh
+# DD-071 clause 1, enforced: the public repository receives snapshot cuts,
+# never history. Local history carries the full discussion bodies that
+# DD-073 keeps private, so one push of a working branch would make every
+# stub in specs/discussions/ decoration.
+#
+# Applies only to the public repository, matched by URL rather than by
+# remote name, so a renamed remote is still covered. Every other remote
+# (the private working-history remote included) passes untouched.
+#
+# A push to the public repository is allowed when each ref it updates:
+#   - adds AT MOST ONE commit the public repository does not already hold,
+#   - and that commit has exactly one parent, which it does hold
+#     (`git commit-tree "v3^{tree}" -p origin/main` produces exactly this),
+#   - and every specs/discussions/*.md in that commit is a stub
+#     (carries `retained_privately:`, which no full record does).
+# A deletion is refused. Tags ride the same rule, so a release tag on an
+# already-cut snapshot passes. Enabled per clone: git config core.hooksPath .githooks
+
+remote="$1"
+url="$2"
+
+case "$url" in
+  *github.com/yasnikoff/docdog|*github.com/yasnikoff/docdog.git|*github.com:yasnikoff/docdog|*github.com:yasnikoff/docdog.git) ;;
+  *) exit 0 ;;
+esac
+
+zero=0000000000000000000000000000000000000000
+fail=0
+
+refuse() {
+  echo "pre-push (DD-071 clause 1): refusing $1 -> $url" >&2
+  echo "  $2" >&2
+  fail=1
+}
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$local_sha" = "$zero" ]; then
+    refuse "$remote_ref" "deletes a public ref"
+    continue
+  fi
+
+  commit=$(git rev-parse "$local_sha^{commit}" 2>/dev/null) || {
+    refuse "$remote_ref" "does not point at a commit"
+    continue
+  }
+
+  # What the public repository already holds: its remote-tracking refs,
+  # plus the ref being overwritten when git knows it.
+  if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha" 2>/dev/null; then
+    new=$(git rev-list "$commit" --not "$remote_sha" --remotes="$remote" | wc -l)
+  else
+    new=$(git rev-list "$commit" --not --remotes="$remote" | wc -l)
+  fi
+  new=$((new + 0))
+
+  [ "$new" -eq 0 ] && continue
+
+  if [ "$new" -gt 1 ]; then
+    refuse "$remote_ref" "carries $new new commits; the public repository takes one snapshot cut at a time (git commit-tree \"v3^{tree}\" -p origin/main)"
+    continue
+  fi
+
+  parents=$(git rev-list --parents -n 1 "$commit" | wc -w)
+  if [ "$((parents - 1))" -ne 1 ]; then
+    refuse "$remote_ref" "the new commit has $((parents - 1)) parents; a snapshot cut has exactly one, the public tip"
+    continue
+  fi
+
+  for f in $(git ls-tree -r --name-only "$commit" -- specs/discussions/ | grep '\.md$'); do
+    if ! git show "$commit:$f" | grep -q '^retained_privately:'; then
+      refuse "$remote_ref" "$f is not a stub (no retained_privately:) — a full discussion record would be published"
+    fi
+  done
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo "  The host-project name and local-path checks in DD-071's amendment are still manual." >&2
+  exit 1
+fi
+exit 0

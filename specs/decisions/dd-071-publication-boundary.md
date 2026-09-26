@@ -25,7 +25,7 @@ relationships:
     context: "step 4 checks that every id an acknowledgment cites is readable on public main — the consumer of the between-releases push this record now permits"
   - references: DD-073
     context: "the amendment to clause 2 — discussions ship as stubs rather than whole, because the eval argument turns out to be two queries in forty and the dogfood argument does not reach a transcript"
-description: "How docdog goes public, decided 2026-07-11 after a full audit. (1) The public history starts at publication: a fresh cut of the current tree — the full development history is never pushed, because it contains docs/discussion.md (explicitly gitignored as private) from the v1 era; it stays local as the DD-039 archive. (2) The specs corpus ships whole, no curation: it is the dogfood evidence, and the frozen retrieval-eval gold sets (tests/eval/queries.yaml) reference corpus records by id — curating would break the shipped eval and falsify OBS-010's numbers. (3) The private host-project name is genericized to host-project placeholders in the shipping worktree; generic role nouns like 'orchestrator' stay. (4) No leak-detection pipeline — this was DD-038's ad-hoc review, run once. AMENDED same day: the audit's claim that docs/discussion.md had been removed from the worktree was false — it was still tracked in HEAD (gitignore is inert for tracked files); fixed with git rm --cached so the fresh cut cannot ship it. Reliable sweep for this trap: git ls-files -i -c --exclude-standard. AMENDED 2026-07-20: the open registry question is closed — npmjs (registry.npmjs.org) as @yasnikoff/docdog, because GitHub Packages requires auth even for public installs, which would break the npx wiring docdog init writes into every adopter's .mcp.json; unscoped docdog and a @docdog org were both checked and rejected (squatted / brand mismatch). .npmrc deleted, HANDOFF-*.md untracked+gitignored. AMENDED 2026-08-31: clause 2 gains one exception (DD-073) — the 41 discussion records ship as STUBS carrying id, title, status, date and the full relationship graph, with bodies and descriptions moved to a private sibling repo; the eval ground for ships-whole was 2 of 40 golds and both still resolve, and the stub is what keeps the 117 inbound edges from dangling. Clause 1 is now load-bearing for a second reason: the full bodies live only in this repo's local history. AMENDED 2026-09-27: public main is the latest published cut of v3's tree, not a release line — releases are the v* tags, which alone trigger publishing; a between-releases cut to main is allowed when it makes a cited record readable, built the same way (commit-tree v3^{tree} -p origin/main, never v3 history). No develop branch: the default branch is where a reporter looks up a cited id, and cuts share no history to merge."
+description: "How docdog goes public, decided 2026-07-11 after a full audit. (1) The public history starts at publication: a fresh cut of the current tree — the full development history is never pushed, because it contains docs/discussion.md (explicitly gitignored as private) from the v1 era; it stays local as the DD-039 archive. (2) The specs corpus ships whole, no curation: it is the dogfood evidence, and the frozen retrieval-eval gold sets (tests/eval/queries.yaml) reference corpus records by id — curating would break the shipped eval and falsify OBS-010's numbers. (3) The private host-project name is genericized to host-project placeholders in the shipping worktree; generic role nouns like 'orchestrator' stay. (4) No leak-detection pipeline — this was DD-038's ad-hoc review, run once. AMENDED same day: the audit's claim that docs/discussion.md had been removed from the worktree was false — it was still tracked in HEAD (gitignore is inert for tracked files); fixed with git rm --cached so the fresh cut cannot ship it. Reliable sweep for this trap: git ls-files -i -c --exclude-standard. AMENDED 2026-07-20: the open registry question is closed — npmjs (registry.npmjs.org) as @yasnikoff/docdog, because GitHub Packages requires auth even for public installs, which would break the npx wiring docdog init writes into every adopter's .mcp.json; unscoped docdog and a @docdog org were both checked and rejected (squatted / brand mismatch). .npmrc deleted, HANDOFF-*.md untracked+gitignored. AMENDED 2026-08-31: clause 2 gains one exception (DD-073) — the 41 discussion records ship as STUBS carrying id, title, status, date and the full relationship graph, with bodies and descriptions moved to a private sibling repo; the eval ground for ships-whole was 2 of 40 golds and both still resolve, and the stub is what keeps the 117 inbound edges from dangling. Clause 1 is now load-bearing for a second reason: the full bodies live only in this repo's local history. AMENDED 2026-09-27: public main is the latest published cut of v3's tree, not a release line — releases are the v* tags, which alone trigger publishing; a between-releases cut to main is allowed when it makes a cited record readable, built the same way (commit-tree v3^{tree} -p origin/main, never v3 history). No develop branch: the default branch is where a reporter looks up a cited id, and cuts share no history to merge. AMENDED 2026-09-27 (second): v3 had no backup anywhere, so the working history now lives on a private remote (yasnikoff/docdog-dev, remote `private`, remote.pushDefault) and clause 1 is enforced by .githooks/pre-push — a push to the public repository may add only one single-parent commit on top of what it holds, with every discussion file a stub. Clause 3's host-name check stays manual, since encoding the name would publish it."
 ---
 
 # DD-071: Publication boundary
@@ -274,6 +274,51 @@ split, merging develop into main at release, does not exist here: cuts
 are made by `commit-tree` from a tree that shares no history with
 either branch, so there is nothing to merge and a second branch is a
 second line of cuts to keep in step.
+
+## Amendment (2026-09-27): the working history has a private remote, and clause 1 has a hook
+
+**Clause 1 said where the history must not go and nothing about where it
+does.** Measured 2026-09-27: `v3` had no upstream and no GitHub repository
+held it — 375 commits, the only copy of the full discussion bodies' history
+and of everything since the recreation, on one disk. "Stays local as the
+DD-039 archive" had quietly come to mean *has no backup*.
+
+**The working history lives on a private remote.** `yasnikoff/docdog-dev`,
+created PRIVATE, is the git remote `private`, and `v3` tracks `private/v3`.
+`v2`, `dev`, `implementation`, `design-draft-1` and the tags went with it —
+all of them local-only until then. The pre-recreation `main` (`3d141f4`, not
+an ancestor of `v3`) is kept there as `archive/main-pre-recreation`; local
+`main` was reset to `origin/main`, so the one local branch that tracks the
+public repository now matches it rather than pointing at the history clause
+1 forbids. `remote.pushDefault = private`, so a bare `git push` from any
+branch cannot reach the public repository.
+
+It is a separate repository from `docdog-discussions` on purpose: that one
+is a docdog corpus with its own `scan_paths`, and code history in it would
+be a second, unrelated thing sharing its default branch.
+
+**Clause 1 is enforced mechanically now.** It was enforced by memory, and
+two routes around it were live: VS Code's *Publish Branch* on `v3`
+(`branch.v3.vscode-merge-base` was `origin/main`), and a `--force` from the
+stale local `main`. `.githooks/pre-push` (enabled per clone with
+`git config core.hooksPath .githooks`) applies only to a push whose URL is
+the public repository, and allows a ref update only if it adds at most one
+commit the public repository does not hold, that commit has exactly one
+parent which it does hold — the shape `commit-tree … -p origin/main`
+produces — and every `specs/discussions/*.md` in it carries
+`retained_privately:`, which no full record does. Deletions are refused.
+Checked by dry-run against the real remote the day it was written: `v3`
+refused (375 new commits), `v3:main --force` refused, a real snapshot cut
+passed, a cut with one full discussion record swapped in refused by file
+name, a push of an already-public tag passed, the private remote untouched.
+
+**What it does not check, named so nobody reads it as covered:** clause 3.
+Matching the private host-project name would put that name in a tracked
+file, which is the leak the check exists to prevent, so the host-name and
+local-path review before a cut stays manual. The hook also lives in the
+clone's config, not in git: a fresh clone is unprotected until
+`core.hooksPath` is set, and `--no-verify` skips it — a guard against an
+accident, not against a decision.
 
 ## DP-001 check
 

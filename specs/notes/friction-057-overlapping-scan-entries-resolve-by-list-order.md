@@ -2,10 +2,13 @@
 id: FRICTION-057
 title: "Two scan_paths entries covering one file both index it, each deleting the other's vertices — the parse the file has alternates on every run, silently"
 collection: notes
-status: open
+status: resolved
+fixed_date: 2026-09-27
+resolution_approach: fix
 date: 2026-09-25
-description: "Discovery iterates scan_paths entries independently with no specificity rule and no `exclude` key, so a directory entry and a file entry covering the same file produce two ParsedFiles with one repoRelPath. `reindexFile` clears prior vertices by file_path, so the two passes delete each other's rows. Measured 2026-09-25 (0.4.0), the result is not list order: the file FLIPS between its two parses on successive `docdog index` runs, in either order, each run reporting success — so the corpus holds the wanted parse on every other run. Nothing reports the overlap. This is undeclared behaviour presenting itself as configuration, and it makes a per-file parser rule an addition to a directory rule rather than an override of it."
+description: "RESOLVED 2026-09-27. Discovery iterates scan_paths entries independently with no specificity rule and no `exclude` key, so a directory entry and a file entry covering the same file produce two ParsedFiles with one repoRelPath. `reindexFile` clears prior vertices by file_path, so the two passes delete each other's rows. Measured 2026-09-25 (0.4.0), the result is not list order: the file FLIPS between its two parses on successive `docdog index` runs, in either order, each run reporting success — so the corpus holds the wanted parse on every other run. Nothing reports the overlap. This is undeclared behaviour presenting itself as configuration, and it makes a per-file parser rule an addition to a directory rule rather than an override of it."
 severity: blocks-work
+upstream_issue: https://github.com/yasnikoff/docdog/issues/1
 relationships:
   - references: DISC-042
     context: "the triage that found this, while answering whether splitting rules are per-repo, per-collection or per-document — the answer is per-entry, and per-entry does not compose"
@@ -142,3 +145,34 @@ out of the implementation:
 
 Note this is true today regardless of issue #1 and regardless of
 PROPOSAL-048. It is a defect in what already ships.
+
+## Resolution (2026-09-27)
+
+Specificity, as proposed, and both open details decided as proposed.
+
+- **Discovery parses each file once, under its governing entry**:
+  `governingScanEntry` in engine/discovery.ts, longest canonical path
+  prefix, list order irrelevant. `./spec/`, `spec\` and `spec` are one
+  path. `matchScanEntry` — the write tools' and single-file reindex's
+  resolver, which was *already* longest-prefix — now delegates to it, so
+  a write and a full index cannot disagree about a file's parser. That
+  pre-existing divergence was the defect's shape: one code path had the
+  rule and the other had none.
+- **Resolved against the configured entries, not the run's.** A second
+  defect of the same kind fell out: `index --path spec/` handed discovery
+  a bare string, so it default-parsed every file under it whatever the
+  config said. It now parses as a full index does. A file no configured
+  entry covers keeps the entry that found it (`--path` outside config,
+  the implicit `.docdog/local/`).
+- **Exact ties are refused by name** before anything is read, quoting
+  both configs. An identical duplicate passes.
+- **The overlap is not reported.** It is the normal way to say "this one
+  file is different".
+
+`tests/unit/scan-entry-specificity.test.ts` runs the measured table —
+four runs, both orders — through the real indexer; 8 of its 12 tests fail
+on the pre-fix source. End to end on the built CLI with issue #1's
+configuration: three runs, `1 reindexed` then `0` and `0`, the rows held.
+The flip's mechanism (FRICTION-021's single signature per path) was not
+separately confirmed and no longer needs to be: one entry per file is one
+signature.

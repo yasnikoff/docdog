@@ -17,6 +17,65 @@ upgrading — the MCP tool `docdog_status` says so in its **Server** block. The
 CLI cannot: `docdog status` describes the installation on disk, and knows
 nothing about a server process someone else started.
 
+## 0.4.2
+
+**Action required:** run `docdog update` to get the rewritten `ingest`
+skill. If you use `parser: script`, or give one file a scan entry of its
+own inside a directory that has another, upgrade and run
+`docdog index --full` once.
+
+One behaviour change can stop an index that ran before: **a path declared
+twice in `scan_paths` with different parser config is now refused**, by
+name, instead of being indexed both ways. Keep one entry for that path.
+
+### Fixed
+
+**A file entry now overrides the directory entry around it
+(FRICTION-057).** With
+
+```yaml
+scan_paths:
+  - spec/
+  - path: spec/design-decisions.md
+    parser: script
+    script: rows
+```
+
+0.4.1 parsed `design-decisions.md` once per entry, and the two parses
+deleted each other's records. The file flipped between them on every
+`docdog index`, in either list order, each run reporting success. Now
+each file is parsed once, by the most specific entry covering it: a
+file beats a directory, a deeper directory beats a shallower one, and
+list order plays no part. The overlap is not reported, because it is the
+normal way to say "this one file is different".
+
+**`docdog index --path <dir>` parses the way a full index does.** It
+used to default-parse every file under the path, whatever parser the
+config gave them.
+
+**The script parser applies the entry's `collection:` (FRICTION-058).**
+It used to file every section the script returned with
+`collection: null` under directory inference or `default_collection`,
+unlike every other parser. A collection the script sets itself still
+wins.
+
+**Editing a parser script re-parses the files it governs
+(FRICTION-059).** The change check hashed the entry, which names the
+script, and not the script, so an edit applied only after `--full`. A
+helper module the script imports is still not tracked: after editing
+one, run `--full`. A running `docdog serve` also picks up the edited
+script on its next index.
+
+### Docs
+
+**Records that are not headings (FRICTION-056).** `split_on` finds
+records only at headings. When a file's units are list items, table
+rows or anything else, and the file must not be reformatted, the answer
+is `parser: script`. Until now it was documented only as a way to read
+foreign formats. The `ingest` skill now leads with that case and
+carries a working script for list-item rows, and the README says a file
+can hold many records.
+
 ## 0.4.1
 
 **Action required:** none. If you keep one corpus in more than one

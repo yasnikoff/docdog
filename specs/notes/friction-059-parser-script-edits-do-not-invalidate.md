@@ -2,9 +2,11 @@
 id: FRICTION-059
 title: "Editing a parser script re-parses nothing — FRICTION-021's fix hashes the scan entry that names the script, not the script"
 collection: notes
-status: open
+status: resolved
+fixed_date: 2026-09-27
+resolution_approach: fix
 date: 2026-09-25
-description: "Incremental `docdog index` skips a file whose hash is unchanged, and since FRICTION-021 that hash covers the file's content plus a signature of its scan entry. For `parser: script` the entry holds only the script's NAME, so editing `.docdog/scripts/<name>.ts` changes nothing the key sees: the old parse stays in the cache, the run reports success, and only `--full` applies the new script. Every script author hits this on their second iteration and reads it as their fix not working."
+description: "RESOLVED 2026-09-27. Incremental `docdog index` skips a file whose hash is unchanged, and since FRICTION-021 that hash covers the file's content plus a signature of its scan entry. For `parser: script` the entry holds only the script's NAME, so editing `.docdog/scripts/<name>.ts` changes nothing the key sees: the old parse stays in the cache, the run reports success, and only `--full` applies the new script. Every script author hits this on their second iteration and reads it as their fix not working."
 severity: inconvenient
 upstream_issue: https://github.com/yasnikoff/docdog/issues/1
 relationships:
@@ -56,3 +58,26 @@ Mechanical (DP-001 tier 1). Imports the script makes are out of reach of
 this and should be named as the residual rather than chased: a script
 importing a helper can still go stale, and `--full` stays the answer
 there.
+
+## Resolution (2026-09-27)
+
+As proposed: for a `parser: script` entry, `parserSignature` folds in the
+script file's LF-normalized sha256 (`parserScriptHash`, shared with the
+parser so both resolve `.ts`/`.js` identically). Editing the script
+dirties exactly the files the entry governs; a line-ending-only change
+dirties nothing. Pinned with an entry layout that does NOT overlap, since
+under FRICTION-057 an overlapped file re-parsed on every run and would
+have passed the test for the wrong reason — which the first draft of the
+test did. Confirmed on the built CLI: a script edit, then plain
+`docdog index`, `1 reindexed`, the new titles present.
+
+**Residuals, named rather than chased:**
+
+- A helper module the script imports is not hashed. `--full` is the
+  answer, and the `ingest` skill says so.
+- **A long-running `serve` and the module cache.** Invalidation re-runs
+  the parse, but `import()` of an already-loaded module returns the old
+  one. The parser now imports with `?v=<content hash>`, which plain Node
+  (the published CLI) honours — measured. **tsx does not** (nor vitest's
+  loader), so this repo's source-mode `.mcp.json` server still needs a
+  restart after a script edit. A one-shot CLI run never needed either.

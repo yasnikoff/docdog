@@ -115,6 +115,17 @@ relationships:
 Ordinary markdown body...
 ```
 
+**One file can hold many records, and stay as written.** By default a file
+is one record. A file whose units are smaller — a decisions log, a glossary,
+a reference amended row by row — gets a parser on its own `scan_paths`
+entry instead of being split up: `split` when each unit begins at a
+heading (`split_on: "## DD-"`), `script` when the units are list items,
+table rows or anything else (a function of yours, run at index time). Each
+unit is then a record with its own id — searchable, and a valid edge
+target — and the file on disk is never rewritten. A file entry overrides
+the directory entry around it. The `ingest` skill (`.docdog/skills/ingest.md`)
+has a worked script.
+
 ## Quickstart
 
 ```bash

@@ -2,9 +2,11 @@
 id: FRICTION-058
 title: "The script parser ignores the scan entry's `collection:` — every other parser applies it, and the ParsedSection contract says it applies"
 collection: notes
-status: open
+status: resolved
+fixed_date: 2026-09-27
+resolution_approach: fix
 date: 2026-09-25
-description: "A `parser: script` entry declaring `collection: decisions` indexes every section the script returns with `collection: null` into directory inference or `default_collection` instead. split, table and default each read `parserConfig.collection` themselves; `script.ts` passes the script's result through untouched and discovery's fallback chain skips parser config — while the `collection` doc comment in parsers/types.ts promises `this field → parser config → frontmatter → directory name → default_collection`."
+description: "RESOLVED 2026-09-27. A `parser: script` entry declaring `collection: decisions` indexes every section the script returns with `collection: null` into directory inference or `default_collection` instead. split, table and default each read `parserConfig.collection` themselves; `script.ts` passes the script's result through untouched and discovery's fallback chain skips parser config — while the `collection` doc comment in parsers/types.ts promises `this field → parser config → frontmatter → directory name → default_collection`."
 severity: inconvenient
 upstream_issue: https://github.com/yasnikoff/docdog/issues/1
 relationships:
@@ -65,3 +67,13 @@ returning `collection: null` under a `collection:`-bearing entry lands in
 that collection. Moving the rule into discovery's chain instead would
 make the three built-ins' copies redundant; either is mechanical (DP-001
 tier 1), the parser-local fix is the smaller diff.
+
+## Resolution (2026-09-27)
+
+`scriptParser` fills a null `collection` on each returned section from
+`parserConfig.collection`, as split, table and default already did. A
+collection the script sets itself still wins, which keeps the one case the
+script *should* decide — rows bound for different collections. Pinned in
+`scan-entry-specificity.test.ts` both ways; confirmed on the built CLI
+(`D-GRAPH-*` under `decisions`, the directory's log entry under `notes`).
+The `types.ts` resolution-order comment is true now rather than amended.

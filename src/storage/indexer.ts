@@ -36,6 +36,7 @@ import {
   discoverAndParseAll,
   findMissingScanPaths,
   withLocalScanPath,
+  governingScanEntry,
   LOCAL_DIR_REL,
   type ParsedFile,
   type SectionToIndex,
@@ -511,18 +512,11 @@ export async function reindexCacheFile(
 
 /** Longest-prefix match of a file path against configured scan entries.
  * Exported for the write tools (src/storage/writes.ts), which resolve
- * the effective parser the same way this module's single-file path does. */
+ * the effective parser the same way this module's single-file path does.
+ * One implementation with discovery's (FRICTION-057), so a write and a full
+ * index can never disagree about which entry governs a file. */
 export function matchScanEntry(scanPaths: ScanPathEntry[], repoRelPath: string) {
-  let best: ReturnType<typeof normalizeScanPath> | null = null;
-  for (const raw of scanPaths) {
-    const entry = normalizeScanPath(raw);
-    const prefix = entry.path.replace(/\\/g, "/");
-    if (repoRelPath !== prefix && !repoRelPath.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`)) {
-      continue;
-    }
-    if (!best || prefix.length > best.path.length) best = entry;
-  }
-  return best;
+  return governingScanEntry(scanPaths, repoRelPath);
 }
 
 // ─── Per-file reconcile ─────────────────────────────────────────────────────

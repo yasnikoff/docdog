@@ -123,10 +123,70 @@ The tradeoff: per-section metadata on disk is limited to what the parser extract
 (id, title, status, date), and split-parsed records refuse the write tools
 (relate/update need a per-record frontmatter block to patch). See DD-068.
 
+## Records that are not headings → a script parser
+
+`split` and `split_on` only find records that begin at a **heading**. When a
+file's units are something else — top-level list items (`- D-AREA-3. …`),
+table rows, entries separated by a marker — and the file must not be
+reformatted, give that one file a `parser: script` entry. The file stays
+exactly as it is; the indexer calls your script on every index and makes one
+record per section it returns.
+
+```yaml
+scan_paths:
+  - spec/                         # everything else in the directory: one record per file
+  - path: spec/design-decisions.md
+    parser: script
+    script: rows                  # .docdog/scripts/rows.js (or rows.ts)
+    collection: decisions         # applied to every section the script leaves unset
+```
+
+```js
+// .docdog/scripts/rows.js — one record per `- D-<AREA>-<n>.` list item
+export default function (input) {
+  // input: { raw, repoRelPath, absPath, parserConfig, projectConfig, projectRoot }
+  const sections = [];
+  let inFence = false;
+  for (const line of input.raw.split("\n")) {
+    if (/^\s*(```|~~~)/.test(line)) inFence = !inFence; // an example is not a record
+    const m = !inFence && /^- (D-[A-Z]+-\d+)\.\s*(.*)$/.exec(line);
+    if (!m) continue;
+    sections.push({
+      sectionKey: m[1],   // stable across edits: the id, never a line number
+      id: m[1],           // what search returns and what edges resolve to
+      title: m[2],
+      content: line,      // what gets embedded and keyword-indexed
+      frontmatter: {},
+      collection: null,   // null = the entry's `collection:`
+    });
+  }
+  return sections;
+}
+```
+
+A real row usually runs past one line; collect its continuation lines into
+`content`. Three things hold, so you do not have to work around them:
+
+- **A file entry overrides the directory entry that also covers it.** The most
+  specific path wins — a file beats a directory, a deeper directory beats a
+  shallower one — and list order plays no part. Declaring the same path twice
+  with different parser config is refused by name.
+- **The entry's `collection:` applies** to every section whose `collection` is
+  null. Set it in the script only when rows go to different collections.
+- **Editing the script re-parses the files it governs** on the next
+  `docdog index`; `--full` is not needed. A helper module the script imports is
+  not tracked — after editing one of those, run `docdog index --full`.
+
+`.js` loads on every Node docdog supports; `.ts` needs a Node that strips types
+natively (22.18+). Records a script produces live inside their file, so, like
+split-parsed records, the write tools refuse them — relate *to* them from other
+records, and edit the file itself.
+
 ## Custom formats → project scripts
 
-For formats that don't fit `split` or `add` (table-based glossaries, CSV exports,
-Confluence dumps), write a project script:
+For formats that are not markdown at all (CSV exports, Confluence dumps,
+table-based glossaries you want as files), write a project script that
+produces files:
 
 ```typescript
 // .docdog/scripts/ingest-glossary.ts
@@ -138,18 +198,6 @@ export default async function(ctx: ScriptContext) {
 ```
 
 Run with: `docdog run ingest-glossary`
-
-Or, for runtime parsing without producing files, register a script parser:
-
-```yaml
-scan_paths:
-  - path: specs/custom.md
-    parser: script
-    script: parse-custom
-    collection: notes
-```
-
-The indexer calls your script at index time.
 
 ## After bringing content in
 
