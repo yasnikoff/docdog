@@ -9,6 +9,8 @@ severity: inconvenient
 relationships:
   - references: DP-001
     context: "motivating example for the agent-first-mechanics principle — inference belongs in the agent loop, not in docdog's code"
+  - amends: DD-064
+    context: "the add section: filename-derived ids collided on date prefixes, so add sets an id only from an explicit --id"
 ---
 
 # Friction: `docdog add` id inference collides on date-prefixed filenames

@@ -14,7 +14,7 @@ This is the test docdog-managed repos are held to:
 > adds retrieval performance and graph queries on top. Without
 > docdog, you lose speed and automation; you don't lose the work.**
 
-This supersedes the old test from DD-066 ("delete every skill,
+This supersedes the old test from EJ-030 ("delete every skill,
 docdog still works"). The three-layer model — core primitives,
 default skills, user skills — stays intact. Only the *test* has
 changed.

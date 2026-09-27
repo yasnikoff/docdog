@@ -85,6 +85,14 @@ index is and stays the primary derivation step).
 
 One file: `.docdog/cache/index.db`, gitignored, disposable.
 
+> **Amended 2026-07-14 by PROPOSAL-029 — embeddings moved out.** The embed
+> cache is no longer a table in this file. It is its own SQLite store,
+> `embeddings.db` under the git common dir (`.git/docdog/`) when git
+> answers, else `.docdog/cache/`, shared by every worktree of the clone. Its
+> schema version lives in its file name from v2 on (FRICTION-034). §8's "no
+> shared cache" still holds for `index.db`, which stays per-worktree and
+> disposable.
+
 - **`meta`** — `schema_version`, embed model id, corpus fingerprint.
   Version mismatch on open → drop all tables, rebuild from disk
   (DD-070 §2: no migrations, ever).

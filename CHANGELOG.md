@@ -17,6 +17,61 @@ upgrading — the MCP tool `docdog_status` says so in its **Server** block. The
 CLI cannot: `docdog status` describes the installation on disk, and knows
 nothing about a server process someone else started.
 
+## 0.5.0
+
+**Action required:** none to keep working. Run `docdog update` to get two
+corrected skill lines (`relate` lists `part_of` rather than the retired
+`parent`/`child`, and describes `reject:` rows; `ejection-resilience`
+cites the right record).
+
+### Added
+
+**`docdog pairs` — find records that say nearly the same thing
+(PROPOSAL-049).** Two records that overlap heavily with no edge between
+them are usually a stale claim nobody retired. `docdog pairs` finds them;
+it never decides what they are.
+
+```bash
+docdog pairs                                  # similar pairs no settling edge joins
+docdog pairs --id DD-042                      # just the one you wrote
+docdog pairs --format review > pairs.yaml     # a file to judge, with the passages that overlap
+docdog pairs --accept-from pairs.yaml --dry-run
+docdog pairs --accept-from pairs.yaml         # apply the verdicts
+docdog pairs --defects                        # defects recorded and not fixed yet
+```
+
+- **It nominates, and something else judges.** Candidates are live
+  records whose stored vectors have a cosine of 0.80 or more, minus pairs
+  a settling edge already joins. Superseded, deprecated, resolved and
+  archived records are left out by default. Nothing calls a model. The
+  review file carries, for each side, the passage most like the other, so
+  the judge (you, or an agent) reads a few lines rather than two whole
+  records.
+- **Each verdict row is checked before it is applied.** A row is refused,
+  by name, when a quoted piece of evidence is not word for word in its
+  file, the relation is not registered, or either body changed after the
+  file was written. The other rows still apply. Edges go through the same
+  path as `suggest-edges`, including the cross-visibility guard. There is
+  no `--accept-all`.
+- **Verdicts are remembered** in `.docdog/pair-verdicts.yaml`, which you
+  commit. A judged pair is not offered again until either body changes.
+  A verdict that records a defect stays on `--defects` until an edge that
+  closes it joins the pair; judging the pair again does not clear it.
+- **Which edges count is configurable per step**, and each run prints what
+  it used:
+
+  ```yaml
+  pairs:
+    edges:
+      settle: [supersedes, amends]   # a pair joined by one of these is not offered
+      show: all                      # edges listed beside a pair for the judge
+      close: [supersedes, amends]    # what closes a recorded defect (defaults to settle)
+  ```
+
+  The defaults are narrowed to the relation types your project registers,
+  so a project without `amends` runs with `supersedes` alone. A type you
+  write yourself that nothing registers is refused.
+
 ## 0.4.2
 
 **Action required:** run `docdog update` to get the rewritten `ingest`

@@ -27,6 +27,8 @@ relationships:
     context: "why this is invisible in the dogfood setup — the orchestrator received PROPOSAL-029 without anyone running an upgrade, because global docdog is an npm link; a registry-installed adopter has the opposite experience"
   - references: DD-070
     context: "§2's no-migrations rail scopes this: the cache and the embed store already have the correct upgrade mechanism (bump, drop, rebuild) and stay out of scope"
+  - amends: PROPOSAL-019
+    context: "§2's emit-once, target-owned output: update now maintains the injectable skills an adopter has not edited"
 ---
 
 # `docdog update`

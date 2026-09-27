@@ -89,6 +89,33 @@ export interface EmbedConfig {
   retain_days?: number;
 }
 
+export interface PairsConfig {
+  /** Which edges take part in each step. Every key is optional and every
+   * resolved value is printed on the run it governs (DP-001 tier 2). */
+  edges?: PairsEdgesConfig;
+}
+
+export interface PairsEdgesConfig {
+  /**
+   * Nomination: a pair joined by one of these, in either direction, is
+   * accounted for and not offered. Default `[supersedes, amends]`.
+   * `references` is deliberately not in it — DD-068 referenced the right
+   * records and still carried a stale claim.
+   */
+  settle?: string[];
+  /**
+   * Review: which of the edges still joining an offered pair are listed
+   * beside it as `declared`. `all` (the default) or a list; `[]` lists none.
+   */
+  show?: string[] | "all";
+  /**
+   * Defects: an open defect closes when one of these joins its pair.
+   * Defaults to whatever `settle` resolves to — the edge that stops a pair
+   * being offered is, unless you say otherwise, the one that fixes it.
+   */
+  close?: string[];
+}
+
 export interface SearchConfig {
   /**
    * Character limit for section previews returned by docdog_search.
@@ -176,6 +203,8 @@ export interface DocdogConfig {
   git: GitConfig;
   embed: EmbedConfig;
   search: SearchConfig;
+  /** `docdog pairs` (PROPOSAL-049). Optional: absent reads as the defaults. */
+  pairs?: PairsConfig;
 
 }
 

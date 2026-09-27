@@ -83,7 +83,7 @@ writes once per source *file* rather than once per edge.
 
 ```bash
 docdog suggest-edges --format review > candidates.yaml   # emit candidates
-# delete the rows you reject; write a context: on the rest
+# write a context: to accept, a reject: <why> to refuse; deleting a row only defers it
 docdog suggest-edges --accept-from candidates.yaml       # apply
 ```
 
@@ -127,7 +127,7 @@ above. Run `docdog index` afterwards and check the warnings.
 | `uses_term` | Source uses a glossary term |
 | `companion` | Created together, should be considered together |
 | `cross_cutting` | Source applies broadly across many records |
-| `parent` / `child` | Structural hierarchy |
+| `part_of` | Source is a piece of the target (declared by the child; DD-072) |
 | `depends_on` | Source requires the target to function |
 
 The registered set lives in the concepts records

@@ -25,6 +25,10 @@ relationships:
     context: "the repair that made patterns structural; this proposal is what that repair implies once PROPOSAL-039 exists, since a predicate over heading nodes is a fine way to *nominate* boundaries and a poor way to assert them"
   - references: DP-001
     context: "the tier argument runs the opposite direction from most proposals here: this removes a decision from code rather than declining to add one, because `--on` asserting that every matching heading begins a separate idea is the claim descent was forbidden from making"
+  - amends: DD-064
+    context: "the split section: --on/--depth stopped executing and --apply-plan became the single executor; the core/scripts split DD-064 makes is unchanged"
+  - amends: PROPOSAL-039
+    context: "the claim that pattern mode is untouched: --on/--depth now only pre-populate a plan"
 ---
 
 # PROPOSAL-045: one executor, and the plan says what comes out

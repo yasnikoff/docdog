@@ -88,6 +88,8 @@ relationships:
     context: "§4 amendment (2026-07-14): the CLI gains merge-driver — the one command that grows the CLI without growing the user surface, since git invokes it and a user never does; the MCP kernel 8 is unchanged"
   - references: PROPOSAL-031
     context: "§4 amendment (2026-07-14): the CLI gains renumber — new capability, not a resurrection, since no version of docdog could rename an id; contested ids ride docdog_status rather than becoming a ninth tool, because two files claiming one id is health"
+  - amends: DD-068
+    context: "the Arango-only half: a disposable cache cannot hold enrichment, so v3 write tools refuse split-parsed sections instead"
 ---
 
 # DD-070: V3 — disk-canonical corpus, embedded disposable cache, kernel surface

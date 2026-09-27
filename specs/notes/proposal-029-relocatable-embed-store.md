@@ -22,6 +22,8 @@ relationships:
     context: "the adoption-scale reading of the same measurement — at ~2.1s/record a 9.5MB corpus faces a first index measured in hours, so this is the onboarding and CI fix as much as the worktree fix"
   - references: DD-034
     context: "untouched — nothing changes about what a vanilla agent reads on disk in specs/; this is entirely a cache-locality change"
+  - amends: PROPOSAL-023
+    context: "§2's one-file layout: the embed cache left index.db for a clone-shared embeddings.db"
 ---
 
 # PROPOSAL-029: A relocatable, content-addressed embed store
@@ -139,6 +141,17 @@ that shipping this does not gratuitously bill every existing user ten
 CPU-minutes.
 
 ### 5. `docdog gc` — a semantic that must change
+
+> **Reversed by DISC-032, shipped with OBS-026 (2026-08-27).** The refusal
+> below fired on every git project, including single-worktree ones, so `gc`
+> was unreachable rather than careful. `gc` now sweeps the shared store
+> against the *union* of every worktree's liveness (`git worktree list` →
+> each tree's `index.db`). It VACUUMs after any deletion and never evicts
+> rows younger than `embed.retain_days` (default 7). That floor is not the
+> age-based *eviction* this section rules out: it only ever declines to call
+> a young row dead. `docdog index` also runs the sweep itself
+> (`embed.auto_gc`). The "gc refuses" line under Implementation is historical
+> for the same reason.
 
 `gc` today evicts `embed_cache` rows whose content hash matches no
 live vertex. **On a shared store that test is wrong**: a row unused in

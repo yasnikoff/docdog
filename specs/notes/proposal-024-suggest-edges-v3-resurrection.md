@@ -12,7 +12,7 @@ relationships:
     context: "the v2 spec this re-implements and replaces as the active commitment; detection logic and CLI shape carry over, the Arango data access becomes three SQL statements"
   - references: OBS-003
     context: "the usage evidence: the v2 scanner surfaced 131 undeclared references accepted in one fast idempotent pass — the tool died in the v3 kernel purge, not on merit"
-  - references: DD-070
+  - amends: DD-070
     context: "amends §4: the CLI list grows by suggest-edges; recorded there inline so the kernel-surface record stays truthful"
   - references: DP-001
     context: "tier walk: mention detection is Tier-1 mechanics, the `references` suggestion type is a visible Tier-2 default, acceptance and typing stay with the agent — nothing is ever written"

@@ -581,6 +581,30 @@ docdog suggest-edges   # report undeclared id mentions as relationship candidate
                        #   `--exclude-status superseded` says *do not scan this source*; a
                        #   ledger row says *this pair was judged*. Conflating them lets a rule
                        #   stand in for a judgment.
+docdog pairs           # nominate similar record pairs no settling edge joins (PROPOSAL-049)
+                       #   --collection --status --exclude-status --threshold --limit
+                       #   --id X (the write-time use) --show-rejected --defects
+                       #   --format review > pairs.yaml | --accept-from pairs.yaml [--dry-run]
+                       #   OBS-029's scratch script made repeatable. Docdog NOMINATES
+                       #   and VALIDATES and never judges: no model call, no --accept-all.
+                       #   Stored record vectors only; paragraphs lost (OBS-030) and
+                       #   appear only as per-run PASSAGES in the review file, the
+                       #   biggest cost lever OBS-030 measured for a judge, never stored.
+                       #   EDGES ARE PER STEP, `pairs.edges` in config, each printed on the
+                       #   run it governs: `settle` drops a pair from nomination (default
+                       #   supersedes + amends; `references` does NOT settle), `show` picks
+                       #   which remaining edges the review lists as `declared` (default
+                       #   all), `close` decides what closes a recorded defect (default =
+                       #   settle). Hiding an edge from the judge is not settling the pair.
+                       #   A TYPED name no concept registers is refused, naming the step;
+                       #   a DEFAULT is narrowed to the registered set and printed, as the
+                       #   status exclusion is — `amends` ships with no adopter's project.
+                       #   --accept-from refuses per row, by name: a quote not verbatim
+                       #   in its file (whitespace-collapsed), an unregistered relation,
+                       #   a body whose hash moved — read from DISK, not the cache. Ledger
+                       #   `.docdog/pair-verdicts.yaml`, keyed to BOTH bodies. A defect
+                       #   row is not a rejection: `--defects` lists it until a settling
+                       #   edge joins the pair. No contradicts/duplicates relation, ever.
 docdog renumber <old> <new>  # rename an id + every inbound edge (PROPOSAL-031)
                        #   --dry-run --prose --rename-file --file <path> (contested loser)
 docdog merge-driver …  # git merge driver: union the relationships: block (PROPOSAL-030)

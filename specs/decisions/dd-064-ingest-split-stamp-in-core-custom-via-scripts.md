@@ -21,6 +21,14 @@ Docdog core ships exactly two generic ingest operations:
 
 ## `docdog split`
 
+> **Amended 2026-08-27 by PROPOSAL-045 — the command below no longer
+> executes.** `--on` / `--depth` now only pre-populate a plan
+> (`split <file> --format plan`), and `split --apply-plan <file>` is the one
+> thing that writes. Passing a selector without `--format plan` is an error.
+> The decision stands: split and stamp are core, custom formats are scripts.
+> Only the invocation changed. The `ingest` and `compose` skills describe the
+> current loop.
+
 ```
 docdog split <file> --on <pattern> --collection <name> --output <dir>
 ```
@@ -35,6 +43,12 @@ collection into the section-per-file layout (DD-053). One-shot,
 not part of steady-state indexing.
 
 ## `docdog add` (frontmatter stamp)
+
+> **Amended 2026-04-14 by FRICTION-005 — `add` never infers an id.** The
+> filename-derived id described below took the first dash-segment, so
+> date-prefixed files all became `2026`. `add` sets `id:` only from an
+> explicit `--id <value>`, one file at a time (DP-001). The title is still
+> taken from the first heading.
 
 ```
 docdog add <source> --collection <name> [--output <dir>]

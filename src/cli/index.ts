@@ -14,6 +14,7 @@ import { registerStatusCommand } from "./commands/status.js";
 import { registerTraverseCommand } from "./commands/traverse.js";
 import { registerRelateCommand } from "./commands/relate.js";
 import { registerSuggestEdgesCommand } from "./commands/suggest-edges.js";
+import { registerPairsCommand } from "./commands/pairs.js";
 import { registerRenumberCommand } from "./commands/renumber.js";
 import { registerMergeDriverCommand } from "./commands/merge-driver.js";
 import { registerGcCommand } from "./commands/gc.js";
@@ -54,6 +55,8 @@ registerStatusCommand(program);
 registerTraverseCommand(program);
 registerRelateCommand(program);
 registerSuggestEdgesCommand(program);
+// PROPOSAL-049 — similar pairs: nominate and validate, never judge.
+registerPairsCommand(program);
 // PROPOSAL-031 — the promotion primitive: rename an id, fix every edge.
 registerRenumberCommand(program);
 // PROPOSAL-030 — plumbing: git invokes this, a user never does.

@@ -70,6 +70,11 @@ export class RelationsRegistry {
     return this.byType.size;
   }
 
+  /** Registered type names, sorted — a vocabulary to show, e.g. to a judge. */
+  names(): string[] {
+    return [...this.byType.keys()].sort();
+  }
+
   /**
    * Given a querying vertex and an edge, return the effective type
    * the caller should display (PROPOSAL-003 §8.1). Pure mechanical

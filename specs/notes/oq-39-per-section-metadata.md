@@ -2,11 +2,21 @@
 id: OQ-39
 title: "Per-section metadata in multi-section files — how rich can it get?"
 collection: questions
-status: leaning
-description: "Multi-section files have limited per-section metadata. Currently extracted: id, title, status, date. Leaning Option 4: rich metadata lives in ArangoDB only. If you want rich disk metadata, split."
+status: resolved
+description: "Multi-section files have limited per-section metadata: id, title, status, date. Resolved by DD-068 as option 4, minus its database half since v3: split-parsed sections keep only what the parser extracts and refuse the write tools; for rich metadata, split the file."
+relationships:
+  - references: DD-068
+    context: the decision that resolved this question with option 4, in the harder form DD-070 left it
 ---
 
 # OQ-39: Per-section metadata in multi-section files — how rich can it get?
+
+**Resolved by DD-068 (mirroring EJ-032), in the form DD-070 left it.**
+Option 4 was taken, minus its database half. v3's cache is disposable, so
+there is no DB-only store, and the write tools refuse split-parsed sections
+rather than enriching them somewhere else. Multi-section files keep only what
+the parser extracts. If you want rich metadata, split the file. The options
+below are the question as it was asked.
 
 Multi-section files (kept via split parser) have limited per-section metadata.
 Currently extracted: `id` (from heading), `title` (from heading), `status` (from

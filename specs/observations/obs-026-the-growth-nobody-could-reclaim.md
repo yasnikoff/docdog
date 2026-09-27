@@ -10,6 +10,8 @@ relationships:
   - references: FRICTION-033
   - references: FRICTION-035
   - references: DP-001
+  - amends: PROPOSAL-029
+    context: "reverses §5: the shared-store gc refusal became a sweep over the union of every worktree's liveness, with a retain_days floor and auto_gc"
 ---
 
 # OBS-026: three separate reasons the store kept growing

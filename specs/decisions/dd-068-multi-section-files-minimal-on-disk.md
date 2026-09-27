@@ -27,6 +27,15 @@ and `date`.
 
 ## What stays in Arango only
 
+> **Amended by DD-070 (v3) — there is no DB-only store any more.** The cache
+> is disposable and rebuilt from disk, so enrichment that exists only in the
+> database would be lost on the next `docdog index`. In v3 a split-parsed
+> section carries exactly what the parser extracts, and the write tools
+> (`docdog_update`, `docdog_relate`) **refuse** it rather than storing
+> enrichment somewhere else. The tradeoff below survives in a harder form:
+> multi-section files keep minimal metadata, full stop, and rich metadata
+> means one-file-per-section. DISC-042 and PROPOSAL-048 state it that way.
+
 - Agent-authored `description` fields (DD-059), added via
   `docdog_update`.
 - Relationship edges (via `docdog_relate`, PROPOSAL-003's

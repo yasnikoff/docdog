@@ -21,6 +21,8 @@ relationships:
     context: "clause 3's second instruction — open a proposal when the right shape is not obvious, which is exactly what FRICTION-025 said about itself"
   - references: PROPOSAL-024
     context: "the scanner this suppresses candidates from; its report-don't-decide posture is what a reject ledger must not quietly undo"
+  - amends: PROPOSAL-028
+    context: "the review file's reject meaning: deleting a row now defers, and refusal is an explicit reject: verdict recorded in a ledger"
 ---
 
 # PROPOSAL-046: a durable reject surface

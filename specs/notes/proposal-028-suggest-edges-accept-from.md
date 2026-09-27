@@ -52,6 +52,14 @@ never drains.
 
 ### 1. The exchange format — `--format review`
 
+> **Amended 2026-08-28 by PROPOSAL-046 — deleting a row no longer means
+> reject.** A row now carries one of two verdicts: fill `context:` to accept,
+> or replace it with `reject: <why>` to refuse durably (recorded in
+> `.docdog/rejected-edges.yaml`). Deleting a row *defers* it, and it comes
+> back on the next sweep. The file below shows the original header. The
+> round-trip symmetry argument stands and is why the reject verdict went into
+> this same file rather than a second one.
+
 A flat YAML document, emitted by the tool and consumed by the tool.
 Round-trip symmetry is the property that matters: **what it emits is
 exactly what it accepts**, minus the rows the agent deleted, plus the

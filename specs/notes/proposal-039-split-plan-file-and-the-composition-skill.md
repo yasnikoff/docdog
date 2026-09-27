@@ -197,7 +197,9 @@ packaging check in `tests/unit/skill-seeds.test.ts` (474 total, green).
 - **`inspectFile` / `planForFile` / `applyPlan`** in `src/engine/ingest.ts`.
 - **`docdog split` gained four modes** and lost its required `--collection`:
   no selector reports, `--format plan` emits, `--apply-plan` executes, and the
-  old `--on` / `--depth` pattern mode is untouched. The file argument is
+  old `--on` / `--depth` pattern mode is untouched. *(Superseded 2026-08-27
+  by PROPOSAL-045: pattern mode stopped executing. `--on` / `--depth` now
+  only pre-populate a plan, and `--apply-plan` is the single executor.)* The file argument is
   refused alongside `--apply-plan`, because the plan names its own source and
   two answers to "which file" is one too many.
 - **`templates/skills/_common/compose.md`** ships the skill.

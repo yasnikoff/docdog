@@ -21,7 +21,7 @@ relationships:
     context: the v3 kernel CLI this shipped into — `docdog skill install` (§4) emits the injectable skill set
   - references: PROPOSAL-020
     context: the factoring the shipped skill set actually followed — navigate-specs plus specs, minus the `/backport` skill
-description: "SHIPPED in v3 — docdog skill install emits the injectable skills (navigate-specs, specs; DD-070 §4). Original pitch: define the smallest possible integration mode for docdog: a one-shot `docdog skill install <name>` command that emits a standalone skill file (plus a generated index file) into a target repository, with zero runtime dependency on docdog. The skill teaches an agent how to navigate the target repo's specs both WITH and WITHOUT docdog present — the non-docdog path (grep + id conventions) is the first-class instruction, the docdog/MCP path is an enhancement layered on top. First and only supported skill name in this proposal is `specs`; the subcommand is shaped as an extension point so future injectable skills (`/tasks`, `/decisions`, etc.) can land one at a time. Id-prefix discovery is empirical from the indexed corpus — no schema primitive required, no dependency on a future `id_pattern` field on dd_collection_meta."
+description: "SHIPPED in v3 — docdog skill install emits the injectable skills (DD-070 §4); the shipped set and on-disk layout have since changed, see the body's status notes. Original pitch: define the smallest possible integration mode for docdog: a one-shot `docdog skill install <name>` command that emits a standalone skill file (plus a generated index file) into a target repository, with zero runtime dependency on docdog. The skill teaches an agent how to navigate the target repo's specs both WITH and WITHOUT docdog present — the non-docdog path (grep + id conventions) is the first-class instruction, the docdog/MCP path is an enhancement layered on top. First and only supported skill name in this proposal is `specs`; the subcommand is shaped as an extension point so future injectable skills (`/tasks`, `/decisions`, etc.) can land one at a time. Id-prefix discovery is empirical from the indexed corpus — no schema primitive required, no dependency on a future `id_pattern` field on dd_collection_meta."
 ---
 
 # PROPOSAL-019: Injectable skills
@@ -32,6 +32,18 @@ skill set (`navigate-specs`, `specs`), following PROPOSAL-020's
 factoring minus `/backport` (which died with PROPOSAL-021's
 sync/export premise). The Arango-era integration modes described
 below are historical.
+
+**Status note (2026-09-27, OBS-029):** the output shape in §2 is historical
+too.
+- A skill installs as a directory, `<target>/docdog-<name>/SKILL.md`,
+  because a flat `specs.md` is discovered by nothing (FRICTION-040).
+- The generated flat index file is gone (FRICTION-043).
+- `navigate-specs` was folded into `specs` (PROPOSAL-044).
+- The output is no longer "emitted once and owned by the target repo":
+  `docdog init` writes the injectable skills, and `docdog update` keeps an
+  unedited one current and reports an edited one (PROPOSAL-041, PROPOSAL-044).
+- `skill install` remains, for re-emitting one skill or writing to a
+  non-default `--target`.
 
 ## Motivation
 
