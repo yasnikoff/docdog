@@ -22,6 +22,10 @@ relationships:
     context: "the existing answer for a corpus whose edges are NOT declared — suggest-edges reads id mentions and proposes; the case here is different, because these edges ARE declared, just not in docdog's spelling"
   - references: DD-058
     context: "the precedent for a field that means two things at once, and the warning against adding another — a key map is exactly the kind of indirection that makes a record's frontmatter stop meaning what it says"
+  - references: FRICTION-061
+    context: "the third answer, found 2026-09-27: the adopter's own parser script can emit the edges, so neither the corpus nor docdog's config has to change"
+  - references: OQ-49
+    context: "the sibling question issue #4 raised: where an edge goes that nobody has written down yet, when its record lives inside another file"
 ---
 
 # OQ-48: someone else's graph, in someone else's key names
@@ -133,3 +137,33 @@ Cheap interim: write the conversion script for issue #1's corpus, offer
 it, and see whether the objection that comes back is *"that is too much
 work"* or *"I will not convert my corpus to suit a tool"*. Those point at
 different answers, and the report does not distinguish them.
+
+## 2026-09-27 — the probe came back, and a third answer was already shipped
+
+Issue #3 is the reporter's answer to the interim probe, unprompted:
+*"Rewriting ~600 files' front matter just to feed `pairs` is possible, but
+the fields are already there."* That is the "too much work" reading, not the
+"I will not convert" one — and the count grew: 494 pairs candidates are
+joined by `amends:`/`adds:`, and a second key surfaced, a backlog item's
+`source: <slug> §N`, whose value is a string carrying a section (63 more).
+That second key is point 2 above arriving on schedule: the first real map
+already needs a value grammar, not just a key rename.
+
+**C. The adopter's parser script emits the edges.** Found while triaging
+the issue (FRICTION-061): the indexer reads each parsed section's
+`frontmatter.relationships`, and this corpus's log is already indexed by a
+`parser: script` that parses exactly those frontmatter keys to build its
+records. Two lines in that script turn `amends: [X]` into
+`{ amends: X }` — verified on a scratch project, edges traverse and settle
+`pairs`. Nothing in the corpus changes, nothing in docdog's config grows,
+and the value grammar (`<slug> §N` → `<slug>§N`) is the adopter's code,
+where DD-064 says a custom format belongs. Backlog items are default-parsed
+today, so `source:` needs that directory on a script too.
+
+C does not close the question. It carries objection 1 in a different
+place — the edge is stated in neither the file nor docdog's config, but in
+code — and it asks every adopter with a declared graph to write a parser.
+What it changes is the evidence standard: B is now a convenience over a
+working route rather than the only route, and the "second corpus" test
+should ask whether that corpus found C adequate, not whether it had a graph.
+

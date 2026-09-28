@@ -218,6 +218,7 @@ export function registerPairsCommand(program: Command): void {
             settleTypes: edgeSteps.settle,
             showTypes: edgeSteps.show,
             closeTypes: edgeSteps.close,
+            withinFile: edgeSteps.withinFile,
             verdicts,
           });
 
@@ -241,6 +242,7 @@ export function registerPairsCommand(program: Command): void {
                   settings: result.settings,
                   pool: result.pool,
                   settled: result.settled,
+                  settledWithinFile: result.settledWithinFile,
                   suppressed,
                   truncated,
                   openDefects: open,
@@ -289,6 +291,11 @@ export function registerPairsCommand(program: Command): void {
           if (result.settled > 0) {
             console.log(
               `${result.settled} pair${result.settled === 1 ? "" : "s"} over the threshold already joined by a settling edge.`,
+            );
+          }
+          if (result.settledWithinFile > 0) {
+            console.log(
+              `${result.settledWithinFile} pair${result.settledWithinFile === 1 ? "" : "s"} over the threshold settled by their file's own structure — same file, or an edge on the record they are part_of (pairs.within_file: offer to see them).`,
             );
           }
           if (suppressed > 0) {

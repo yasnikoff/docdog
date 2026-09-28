@@ -177,10 +177,38 @@ A real row usually runs past one line; collect its continuation lines into
   `docdog index`; `--full` is not needed. A helper module the script imports is
   not tracked — after editing one of those, run `docdog index --full`.
 
+- **A section's `frontmatter.relationships` becomes its edges**, exactly as a
+  `relationships:` block in a file does — so a script can derive the graph a
+  corpus already writes in its own spelling, with no file rewritten:
+
+  ```js
+  // `amends: [D-GRAPH-13]` in the entry's frontmatter, a `(slug, §7)` citation in its prose
+  frontmatter: {
+    id,
+    relationships: [
+      ...amends.map((row) => ({ amends: row })),                 // type must be registered
+      ...cites.map(([slug, n]) => ({ references: `${slug}§${n}`, context: "cited in text" })),
+      { part_of: headId },                                       // a section of an entry
+    ],
+  },
+  ```
+
+  Same type-as-key shape, same registration rule (an unregistered type is
+  warned about at index time). The script sees one file, but `projectRoot` is
+  in its input, so a citation that names a record by title can be resolved by
+  reading the directory. These edges settle `docdog pairs` like any other when
+  their type is in `pairs.edges.settle` — and, by default
+  (`pairs.within_file: settle`), two records from one file are never offered
+  as a pair, and an edge on a head record settles for the sections that are
+  `part_of` it. So put an entry-level edge on the head, where the entry
+  states it; do not copy it onto every section.
+
 `.js` loads on every Node docdog supports; `.ts` needs a Node that strips types
 natively (22.18+). Records a script produces live inside their file, so, like
-split-parsed records, the write tools refuse them — relate *to* them from other
-records, and edit the file itself.
+split-parsed records, the write tools refuse them: an edge the script can
+*derive* belongs in the script; one someone has to *decide* (an accepted
+`suggest-edges` or `pairs` row) has to be recorded from the other end, on a
+record that has its own file.
 
 ## Custom formats → project scripts
 

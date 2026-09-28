@@ -56,6 +56,41 @@ Including the environment block (`docdog status --json`, per the issue
 template). Version and install shape decide half the outcomes below
 before the defect is even understood.
 
+### 1b. Take in the evidence, when the issue brings some
+
+A measurement-shaped report comes with an **evidence repository**: a
+private repo the reporter owns, shared by invitation, laid out by the
+`docdog-feedback` skill's §3a — the snapshot is itself a docdog project
+with a `measurements/` folder beside it. One repo per adopting project,
+one tag per snapshot.
+
+If the evidence arrived some other way (a zip, a folder), put it in that
+shape first and push it as a private repo under the account that owns
+the data — ComplexPoint's first snapshot came as a 96 MB zip, 85 MB of
+which was cache.
+
+1. **Clone it outside this repository**, as a sibling
+   (`../evidence/<project>/`), and **never add it to `scan_paths`**. A
+   foreign corpus in this index is DD-073's contested-id problem and a
+   publication risk at once.
+2. **Pin the sha.** Every record that leans on it carries
+   `evidence: <owner>/<repo>@<short-sha>` — a snapshot is an observation
+   with a date (FRICTION-055), and the sha is what keeps a later snapshot
+   from silently changing what the record meant.
+3. **Index it with the version under test**, not the one it was measured
+   with: `npx tsx src/cli/index.ts index` run from the clone, or the
+   installed build if that is what is being checked. Its cache is local
+   to the clone and gitignored there.
+4. **Re-run the headline numbers the classification rests on** before
+   trusting them. They are the reporter's measurements on the reporter's
+   machine and version. `tests/eval/run-external-eval.ts --root <clone>`
+   reaches retrieval; anything else is a command away. Where a number
+   does not reproduce, that is a finding for the reply.
+5. **Copy nothing from it into a record** beyond what the public issue
+   already says, plus counts. Records ship whole (DD-071); the evidence
+   repo is private by the reporter's choice, and that choice covers its
+   content, not only its bytes.
+
 ### 2. Classify — each ask, not the issue
 
 An issue is not one reading. Split it into its asks — the reporter's own
@@ -191,6 +226,10 @@ whether upgrading helps.
   2), the assumption that a new id is already in the reporter's package,
   and the absence of any rule that the reply be tested (step 4). Expect a
   second sweep to find something else.
+- **Second sweep** — issues #2–#4, 2026-09-27. They were the first to
+  rest on a measurement too large for an issue body, and step 1b was
+  added for them: the evidence had arrived as an ad-hoc zip with no
+  agreed shape and no place to live.
 - Triage cadence is the maintainer's; the only hard rule is that the
   sweep happens before a release, because a fix that ships without its
   issue being closed strands the person who found it.

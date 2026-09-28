@@ -605,6 +605,10 @@ docdog pairs           # nominate similar record pairs no settling edge joins (P
                        #   `.docdog/pair-verdicts.yaml`, keyed to BOTH bodies. A defect
                        #   row is not a rejection: `--defects` lists it until a settling
                        #   edge joins the pair. No contradicts/duplicates relation, ever.
+                       #   `pairs.within_file: settle` (default; FRICTION-062): one file's
+                       #   records never pair, and an edge on a record settles for what is
+                       #   part_of it IN THE SAME FILE — never lifted to a whole file.
+                       #   Empty bodies get no vector (FRICTION-060), so never pair either.
 docdog renumber <old> <new>  # rename an id + every inbound edge (PROPOSAL-031)
                        #   --dry-run --prose --rename-file --file <path> (contested loser)
 docdog merge-driver …  # git merge driver: union the relationships: block (PROPOSAL-030)

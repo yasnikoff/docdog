@@ -98,6 +98,18 @@ describe("checkEmbedHealth", () => {
     expect(checkEmbedHealth(db, 100).oversized[0].unembedded).toBe(400);
   });
 
+  it("lists a whitespace-only body past the cap as empty, never also as oversized", () => {
+    db.prepare(`INSERT INTO vertices (id, file_path, body_text) VALUES (?, ?, ?)`).run(
+      "BLANK",
+      "specs/blank.md",
+      " \n".repeat(MAX_EMBED_CHARS),
+    );
+    const report = checkEmbedHealth(db);
+    expect(report.emptyBodies.map((r) => r.id)).toEqual(["BLANK"]);
+    // No vector means no cut: an oversized entry links the view to one.
+    expect(report.oversized).toEqual([]);
+  });
+
   it("does not divide by zero on an empty corpus", () => {
     expect(checkEmbedHealth(db).unembeddedPct).toBe(0);
   });

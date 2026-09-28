@@ -215,6 +215,7 @@ export function describeSettings(result: NominateResult): string {
   if (s.status) parts.push(`status: ${s.status.join(", ")}`);
   parts.push(`excluding status: ${s.excludeStatus.length > 0 ? s.excludeStatus.join(", ") : "(none)"}`);
   parts.push(`edges — ${describePairEdges({ settle: s.settleTypes, show: s.showTypes, close: s.closeTypes })}`);
+  parts.push(`within a file: ${s.withinFile} (pairs.within_file)`);
   return parts.join("; ");
 }
 

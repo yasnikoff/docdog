@@ -93,6 +93,15 @@ export interface PairsConfig {
   /** Which edges take part in each step. Every key is optional and every
    * resolved value is printed on the run it governs (DP-001 tier 2). */
   edges?: PairsEdgesConfig;
+  /**
+   * Whether a file's own structure accounts for a pair (FRICTION-062).
+   * `settle` (the default): two records from one source file are not offered,
+   * and a settling edge on a record also settles for the records that are
+   * `part_of` it within the same file — an entry that amends a row accounts
+   * for its sections too. `offer`: only a direct edge settles. Printed on
+   * every run with the count it removed.
+   */
+  within_file?: "settle" | "offer";
 }
 
 export interface PairsEdgesConfig {

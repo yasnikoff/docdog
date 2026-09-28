@@ -324,9 +324,10 @@ export function suggestEdges(
   return results;
 }
 
-/** Simple glob: `*` matches anything; no `?` or character classes. */
+/** Simple glob: `*` matches anything; no `?` or character classes — a `?`
+ * is a literal, and must be escaped or `--id ?` throws building the regex. */
 function matchPattern(value: string, pattern: string): boolean {
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
   return new RegExp(`^${escaped}$`).test(value);
 }
 

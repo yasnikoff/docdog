@@ -22,7 +22,7 @@ export function registerStatusCommand(program: Command): void {
         "../../storage/status.js"
       );
       const { formatStatusVocabulary } = await import("../../storage/status-vocabulary.js");
-      const { formatEmbedHealth } = await import("../../storage/embed-health.js");
+      const { formatEmbedHealth, formatEmptyBodies } = await import("../../storage/embed-health.js");
 
       const install = describeInstall(projectRoot);
 
@@ -99,6 +99,12 @@ export function registerStatusCommand(program: Command): void {
         for (const entry of report.contested) {
           for (const line of formatContestedId(entry)) console.log(line);
         }
+      }
+
+      if (report.embedHealth.emptyBodies.length > 0) {
+        console.log();
+        console.log(`Records with an empty body: ${report.embedHealth.emptyBodies.length}`);
+        for (const line of formatEmptyBodies(report.embedHealth)) console.log(line);
       }
 
       if (report.embedHealth.oversized.length > 0) {

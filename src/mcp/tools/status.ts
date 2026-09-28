@@ -10,7 +10,7 @@
  * handler is the markdown-rendering adapter and nothing more.
  */
 import type { DocdogConfig } from "../../types/config.js";
-import { formatEmbedHealth } from "../../storage/embed-health.js";
+import { formatEmbedHealth, formatEmptyBodies } from "../../storage/embed-health.js";
 import { collectStatus, formatContestedId, formatEmbedStore, formatScopes } from "../../storage/status.js";
 import { formatStatusVocabulary } from "../../storage/status-vocabulary.js";
 import { withNextActions } from "../next-actions.js";
@@ -142,6 +142,11 @@ export async function handleStatus(
   // Reported for the same reason and in the same voice: name the fact, name
   // nothing to do about it — the remedy is chunking (PROPOSAL-023 §2), which
   // is docdog's work and not the reader's.
+  if (report.embedHealth.emptyBodies.length > 0) {
+    lines.push("");
+    lines.push(`**Records with an empty body:** ${report.embedHealth.emptyBodies.length}`);
+    for (const line of formatEmptyBodies(report.embedHealth)) lines.push(line);
+  }
   if (report.embedHealth.oversized.length > 0) {
     lines.push("");
     lines.push(

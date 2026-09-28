@@ -191,6 +191,14 @@ describe("storage cache search", () => {
     expect(dd001.relevance.keyword_bm25).toBeUndefined();
   });
 
+  it("refuses a limit that is not a positive integer", async () => {
+    // slice(0, -1) dropped the last candidate silently; NaN reached SQL
+    // LIMIT and surfaced as a datatype error blamed on the cache.
+    for (const limit of [-1, 0, 1.5, Number.NaN]) {
+      await expect(run({ query: "alpha", limit })).rejects.toMatchObject({ code: "LIMIT_INVALID" });
+    }
+  });
+
   it("filters by collection", async () => {
     const results = await run({ query: "bravo", collection: "notes" });
     expect(results).toHaveLength(1);

@@ -26,7 +26,7 @@ import {
   countSupersededRecipeRows,
   findUnusedRows,
   liveContentHashes,
-  openEmbedStore,
+  openEmbedStoreForReading,
   resolveEmbedStorePath,
   retentionCutoff,
   DEFAULT_RETAIN_DAYS,
@@ -85,6 +85,13 @@ export interface EmbedStoreReport {
    * not sum with it. Null until the store exists.
    */
   supersededRecipe: number | null;
+  /**
+   * Set when the file exists but status could not read it as a current
+   * store — a different schema version, or not SQLite at all. Reported,
+   * never repaired: status opens the store read-only, since the surfaces
+   * that render it include a browser GET (PROPOSAL-050). Counts are null.
+   */
+  problem?: string;
 }
 
 export interface StatusReport {
@@ -201,6 +208,7 @@ export function collectStatus(projectRoot: string, config: DocdogConfig): Status
 export function formatEmbedStore(store: EmbedStoreReport): string {
   const scope = store.shared ? "shared across worktrees" : "project-local";
   if (!store.exists) return `${store.path} (${scope}, not created yet)`;
+  if (store.problem) return `${store.path} (${scope}) ${store.problem}`;
 
   const head = `${store.path} (${store.vectors} vector(s), ${store.sizeMb!.toFixed(1)} MB, ${scope})`;
   const pct = (n: number) => Math.round((n / store.vectors!) * 100);
@@ -300,7 +308,20 @@ function describeEmbedStore(
     };
   }
 
-  const store = openEmbedStore(projectRoot, config);
+  const store = openEmbedStoreForReading(location.path);
+  if (store.problem !== undefined) {
+    return {
+      path: location.path,
+      shared: location.shared,
+      exists: true,
+      vectors: null,
+      sizeMb: statSync(location.path).size / 1024 / 1024,
+      unused: null,
+      retainedByFloor: null,
+      supersededRecipe: null,
+      problem: store.problem,
+    };
+  }
   try {
     const vectors = (
       store.db.prepare(`SELECT COUNT(*) AS n FROM embed_cache`).get() as { n: number }
@@ -331,6 +352,6 @@ function describeEmbedStore(
       ),
     };
   } finally {
-    store.close();
+    store.db.close();
   }
 }

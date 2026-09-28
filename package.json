@@ -1,6 +1,6 @@
 {
   "name": "@yasnikoff/docdog",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Context management toolkit for AI agents — disk-canonical, MCP-native",
   "type": "module",
   "bin": {

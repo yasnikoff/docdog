@@ -50,6 +50,7 @@ import {
   describeRecipeChange,
   checkEmbedHealth,
   formatEmbedHealthWarnings,
+  hasEmbeddableBody,
 } from "./embed-health.js";
 import {
   EMBED_SCHEMA_VERSION,
@@ -427,6 +428,19 @@ export async function runCacheIndexer(options: CacheIndexerOptions): Promise<Cac
       }
 
       const embedHealth = checkEmbedHealth(db, MAX_EMBED_CHARS);
+
+      // Clear a vector an older docdog stored for an empty body. The file is
+      // unchanged, so the incremental run skipped it and the per-file refusal
+      // above never saw it; without this, only `--full` would apply the fix.
+      // By id from the report, so one predicate (`hasEmbeddableBody`) decides.
+      const clear = db.prepare(
+        `UPDATE chunks SET embedding = NULL WHERE vertex_id = ? AND embedding IS NOT NULL`,
+      );
+      let cleared = 0;
+      for (const r of embedHealth.emptyBodies) cleared += clear.run(r.id).changes;
+      if (cleared > 0) {
+        log(`  Cache: cleared ${cleared} vector(s) stored for an empty body (FRICTION-060).`);
+      }
       stats.oversizedRecords = embedHealth.oversized.length;
       for (const line of formatEmbedHealthWarnings(embedHealth)) warn(line);
     }
@@ -806,6 +820,12 @@ async function resolveEmbeddings(
 
   for (let i = 0; i < sections.length; i++) {
     const s = sections[i];
+    // No vector for an empty body (FRICTION-060): the model's answer to
+    // nothing is one fixed vector, shared by every such record, which
+    // `pairs` then ranks at cosine 1.000. A refusal, not a new input, so the
+    // recipe does not change — a null chunk is what search and pairs
+    // already skip.
+    if (!hasEmbeddableBody(s.content)) continue;
     const hit = store.get(s.contentHash, recipe);
     if (hit) {
       blobs[i] = hit;

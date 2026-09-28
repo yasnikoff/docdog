@@ -64,7 +64,8 @@ export class SearchError extends Error {
       | "WHERE_INVALID_VALUE"
       | "WHERE_NOT_SCALAR"
       | "FIELD_INVALID_KEY"
-      | "FIELD_CONTRADICTION",
+      | "FIELD_CONTRADICTION"
+      | "LIMIT_INVALID",
   ) {
     super(message);
     this.name = "SearchError";
@@ -176,6 +177,11 @@ export async function search(
   embedQuery: EmbedQueryFn = generateEmbedding,
 ): Promise<SearchResult[]> {
   const { query, limit = 10 } = options;
+  // `slice(0, -1)` silently drops the last candidate and NaN reaches SQL
+  // LIMIT as a datatype error blamed on the cache — refuse both by name.
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new SearchError(`limit must be a positive integer, got ${String(limit)}`, "LIMIT_INVALID");
+  }
   // A collection filter naming a collection the corpus never defines is a
   // typo, not an empty corpus — refuse it loudly rather than returning zero
   // as if the filter succeeded (FRICTION-030). Every other filter legitimately

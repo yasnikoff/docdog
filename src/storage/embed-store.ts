@@ -661,6 +661,38 @@ export function countSupersededRecipeRows(
   ).n;
 }
 
+/**
+ * Open an existing store for READING ONLY, for the surfaces that report on
+ * it (`docdog status`, `docdog_status`, `docdog view`'s /index). Never
+ * repairs: `openEmbedStore` deletes a file that is not SQLite and drops every
+ * vector when the schema version differs, both correct for `index` and both
+ * wrong for a surface someone reads — a browser GET must not be able to cost
+ * a full re-embed. A store that open would repair comes back as `problem`,
+ * which is a fact to report; the next `docdog index` performs the repair.
+ */
+export function openEmbedStoreForReading(
+  path: string,
+): { db: Database.Database; problem?: undefined } | { db?: undefined; problem: string } {
+  let db: Database.Database;
+  try {
+    db = new Database(path, { readonly: true, fileMustExist: true });
+    db.pragma("busy_timeout = 5000");
+  } catch (err) {
+    return { problem: `could not be opened for reading (${(err as Error).message})` };
+  }
+  const found = readVersion(db);
+  if (found !== EMBED_SCHEMA_VERSION) {
+    db.close();
+    return {
+      problem:
+        found === null
+          ? `is not a store this docdog recognizes; the next "docdog index" replaces it`
+          : `holds schema v${found}, this docdog reads v${EMBED_SCHEMA_VERSION}; the next "docdog index" rebuilds it`,
+    };
+  }
+  return { db };
+}
+
 function connect(path: string): Database.Database {
   const db = new Database(path);
   try {

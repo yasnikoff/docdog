@@ -196,8 +196,33 @@ export interface OversizedRecord {
   lostPct: number;
 }
 
+/**
+ * A body with nothing to embed (FRICTION-060). Whitespace-only counts:
+ * the model's answer to "nothing" is one fixed vector, so every such
+ * record used to share it and `pairs` ranked each pair of them at cosine
+ * 1.000 — 153 candidates from 18 records, above every real one. Such a
+ * record gets no vector now (`hasEmbeddableBody`), and stays findable by
+ * its title and description through FTS.
+ */
+export interface EmptyBodyRecord {
+  id: string;
+  filePath: string;
+}
+
+/**
+ * Whether a record's body can be embedded — the one predicate the indexer
+ * (which declines to embed), the repair pass (which clears a vector an
+ * older docdog stored) and this report share. Tier 1: a length, not a
+ * judgment about whether the record matters.
+ */
+export function hasEmbeddableBody(content: string): boolean {
+  return content.trim() !== "";
+}
+
 export interface EmbedHealthReport {
   cap: number;
+  /** Records with no vector because their body is empty (FRICTION-060). */
+  emptyBodies: EmptyBodyRecord[];
   /** Worst first — a 67%-truncated record is a different problem from a 4% one. */
   oversized: OversizedRecord[];
   unembeddedChars: number;
@@ -220,12 +245,21 @@ export function checkEmbedHealth(
   }>;
 
   const oversized: OversizedRecord[] = [];
+  const emptyBodies: EmptyBodyRecord[] = [];
   let totalChars = 0;
   let unembeddedChars = 0;
 
   for (const row of rows) {
     const chars = row.body_text.length;
     totalChars += chars;
+    // A body with nothing to embed gets no vector at all, so it has no cut
+    // either: listing a whitespace-only body past the cap as "oversized" too
+    // put one record in both lists and sent the view to a cut that does not
+    // exist.
+    if (!hasEmbeddableBody(row.body_text)) {
+      emptyBodies.push({ id: row.id, filePath: row.file_path });
+      continue;
+    }
     if (chars <= cap) continue;
     const unembedded = chars - cap;
     unembeddedChars += unembedded;
@@ -239,9 +273,11 @@ export function checkEmbedHealth(
   }
 
   oversized.sort((a, b) => b.unembedded - a.unembedded);
+  emptyBodies.sort((a, b) => a.id.localeCompare(b.id));
 
   return {
     cap,
+    emptyBodies,
     oversized,
     unembeddedChars,
     totalChars,
@@ -249,22 +285,44 @@ export function checkEmbedHealth(
   };
 }
 
-/** Render as index warning lines. Empty when every record fits. */
+/** Render as index warning lines. Empty when every record fits and has a body. */
 export function formatEmbedHealthWarnings(report: EmbedHealthReport): string[] {
-  if (report.oversized.length === 0) return [];
+  const lines: string[] = [];
+  if (report.emptyBodies.length > 0) {
+    const shown = report.emptyBodies.slice(0, 3).map((r) => r.id);
+    const more = report.emptyBodies.length - shown.length;
+    lines.push(
+      `  Cache: ${report.emptyBodies.length} record(s) have an empty body — no vector, ` +
+        `so they are findable by title and description only: ` +
+        `${shown.join(", ")}${more > 0 ? `, +${more} more` : ""}. ` +
+        `Run "docdog status" to list them.`,
+    );
+  }
+  if (report.oversized.length === 0) return lines;
 
   const shown = report.oversized
     .slice(0, 3)
     .map((r) => `${r.id} (${r.chars} chars, ${r.lostPct}% unembedded)`);
   const more = report.oversized.length - shown.length;
 
-  return [
+  lines.push(
     `  Cache: ${report.oversized.length} record(s) exceed the ${report.cap}-char embed cap — ` +
       `only the first ${report.cap} chars of each reach the vector index, so ` +
       `${report.unembeddedPct.toFixed(1)}% of the corpus is findable by keyword but not by meaning: ` +
       `${shown.join("; ")}${more > 0 ? `; +${more} more` : ""}. ` +
       `Run "docdog status" to list them.`,
-  ];
+  );
+  return lines;
+}
+
+/** Status lines for empty-bodied records, bounded like the oversized list. */
+export function formatEmptyBodies(report: EmbedHealthReport): string[] {
+  if (report.emptyBodies.length === 0) return [];
+  const lines = [`  No vector — these are findable by title and description only.`];
+  for (const r of report.emptyBodies.slice(0, MAX_LISTED)) lines.push(`    ${r.id} — ${r.filePath}`);
+  const more = report.emptyBodies.length - MAX_LISTED;
+  if (more > 0) lines.push(`    +${more} more ("docdog status --json" lists all)`);
+  return lines;
 }
 
 /**

@@ -40,11 +40,22 @@ export const DEFAULT_SETTLE_TYPES: readonly string[] = ["supersedes", "amends"];
  * judge see beside it (show), has the defect recorded against it been fixed
  * (close). They default to agreeing, and nothing requires them to.
  */
+/** How a pair inside one file's structure is treated (FRICTION-062). */
+export type WithinFile = "settle" | "offer";
+
+/** Visible default (tier 2). A multi-record file's records are written
+ * together on purpose, and an edge its head states is stated for the whole
+ * entry; offering those pairs asks a judge to re-read the file's structure. */
+export const DEFAULT_WITHIN_FILE: WithinFile = "settle";
+
 export interface PairEdgeSteps {
   settle: string[];
   /** Null = every edge. */
   show: string[] | null;
   close: string[];
+  /** `pairs.within_file` (FRICTION-062): whether the file's own structure
+   * settles a pair. Default "settle". */
+  withinFile: WithinFile;
   /** Which sets someone wrote in config. A typed name nothing registers is
    * refused; a DEFAULT is narrowed to what the corpus registers instead,
    * because nobody typed it — `amends` ships with no project but this one.
@@ -62,17 +73,22 @@ export function resolvePairEdges(config: DocdogConfig): PairEdgeSteps {
   const pairs: unknown = config.pairs;
   if (pairs !== undefined && pairs !== null) {
     if (typeof pairs !== "object" || Array.isArray(pairs)) {
-      throw new PairsError("pairs must be a mapping — its one key is edges", "INVALID_CONFIG");
+      throw new PairsError("pairs must be a mapping with edges and within_file keys", "INVALID_CONFIG");
     }
     for (const key of Object.keys(pairs)) {
-      if (key !== "edges") {
+      if (key !== "edges" && key !== "within_file") {
         throw new PairsError(
-          `pairs.${key} is not a key — the edge sets live under pairs.edges (settle, show, close)`,
+          `pairs.${key} is not a key — the edge sets live under pairs.edges (settle, show, close); the other key is within_file`,
           "INVALID_CONFIG",
         );
       }
     }
   }
+  const rawWithin: unknown = config.pairs?.within_file;
+  if (rawWithin !== undefined && rawWithin !== "settle" && rawWithin !== "offer") {
+    throw new PairsError(`pairs.within_file must be settle or offer, got ${JSON.stringify(rawWithin)}`, "INVALID_CONFIG");
+  }
+  const withinFile: WithinFile = (rawWithin as WithinFile | undefined) ?? DEFAULT_WITHIN_FILE;
   const raw: unknown = config.pairs?.edges;
   if (raw !== undefined && (raw === null || typeof raw !== "object" || Array.isArray(raw))) {
     throw new PairsError("pairs.edges must be a mapping with settle, show and close keys", "INVALID_CONFIG");
@@ -102,6 +118,7 @@ export function resolvePairEdges(config: DocdogConfig): PairEdgeSteps {
     settle,
     show,
     close,
+    withinFile,
     typed: {
       settle: typedSettle !== undefined,
       show: show !== null,
@@ -132,6 +149,7 @@ export function checkPairEdges(steps: PairEdgeSteps, known: ReadonlySet<string>)
     settle: step("settle", steps.settle),
     show: steps.show ? step("show", steps.show) : null,
     close: step("close", steps.close),
+    withinFile: steps.withinFile,
     typed: steps.typed,
   };
 }
@@ -214,6 +232,8 @@ export interface NominateOptions {
   /** Edges that close a defect. Not read by nomination — carried so the
    * settings every surface prints name all three sets. Default: settle. */
   closeTypes?: readonly string[];
+  /** Default DEFAULT_WITHIN_FILE. */
+  withinFile?: WithinFile;
   verdicts?: readonly PairVerdict[];
 }
 
@@ -228,12 +248,16 @@ export interface NominateResult {
     settleTypes: string[];
     showTypes: string[] | null;
     closeTypes: string[];
+    withinFile: WithinFile;
     id: string | null;
   };
   /** Records in the live pool that carry a vector. */
   pool: number;
   /** Pairs over the threshold that a settling edge removed. */
   settled: number;
+  /** Pairs over the threshold that the file's own structure removed
+   * (`within_file: settle`); always 0 under `offer`. */
+  settledWithinFile: number;
 }
 
 export class PairsError extends Error {
@@ -268,6 +292,7 @@ export function nominatePairs(
   const settleTypes = [...(opts.settleTypes ?? DEFAULT_SETTLE_TYPES)];
   const showTypes = opts.showTypes ? [...opts.showTypes] : null;
   const closeTypes = [...(opts.closeTypes ?? settleTypes)];
+  const withinFile = opts.withinFile ?? DEFAULT_WITHIN_FILE;
   const allow = opts.status && opts.status.length > 0 ? opts.status : null;
 
   // The default exclusion is a convention list, and a corpus may use none of
@@ -317,9 +342,11 @@ export function nominatePairs(
   const settling = new Set(settleTypes);
   const shown = showTypes ? new Set(showTypes) : null;
   const ledger = verdictIndex(opts.verdicts ?? []);
+  const structure = withinFile === "settle" ? loadFileStructure(db, settleTypes) : null;
 
   const candidates: PairCandidate[] = [];
   let settled = 0;
+  let settledWithinFile = 0;
   for (let i = 0; i < ids.length; i++) {
     const x = ids[i];
     if (opts.id && x !== opts.id) {
@@ -335,6 +362,10 @@ export function nominatePairs(
       const between = edges.get(pairKey(x, y)) ?? [];
       if (between.some((e) => settling.has(e.type))) {
         settled++;
+        continue;
+      }
+      if (structure && settledByFile(structure, sides.get(x)!, sides.get(y)!)) {
+        settledWithinFile++;
         continue;
       }
 
@@ -371,11 +402,83 @@ export function nominatePairs(
       settleTypes,
       showTypes,
       closeTypes,
+      withinFile,
       id: opts.id ?? null,
     },
     pool: ids.length,
     settled,
+    settledWithinFile,
   };
+}
+
+/**
+ * What `within_file: settle` reads (FRICTION-062): for each record, the
+ * records it is `part_of` inside its own file (transitively), and every
+ * settling edge in the corpus as an unordered key. Loaded whole rather than
+ * from the pool, because the record an entry's edge lives on — its head —
+ * may be outside the pool (filtered by status, or holding no vector since
+ * FRICTION-060) and still be the record that states the edge.
+ */
+interface FileStructure {
+  containers: Map<string, string[]>;
+  settlingKeys: Set<string>;
+}
+
+function loadFileStructure(db: Database.Database, settleTypes: readonly string[]): FileStructure {
+  const parents = new Map<string, string[]>();
+  const rows = db
+    .prepare(
+      `SELECT e.from_id AS child, e.to_id AS parent
+         FROM edges e
+         JOIN vertices c ON c.id = e.from_id
+         JOIN vertices p ON p.id = e.to_id
+        WHERE e.type = 'part_of' AND c.file_path = p.file_path`,
+    )
+    .all() as Array<{ child: string; parent: string }>;
+  for (const r of rows) {
+    if (!parents.has(r.child)) parents.set(r.child, []);
+    parents.get(r.child)!.push(r.parent);
+  }
+  const containers = new Map<string, string[]>();
+  for (const id of parents.keys()) {
+    const seen = new Set<string>();
+    const stack = [...parents.get(id)!];
+    while (stack.length > 0) {
+      const next = stack.pop()!;
+      if (next === id || seen.has(next)) continue;
+      seen.add(next);
+      stack.push(...(parents.get(next) ?? []));
+    }
+    containers.set(id, [...seen]);
+  }
+  const settlingKeys = new Set<string>();
+  if (settleTypes.length > 0) {
+    const q = db.prepare(
+      `SELECT from_id, to_id FROM edges WHERE type IN (${settleTypes.map(() => "?").join(", ")})`,
+    );
+    for (const e of q.all(...settleTypes) as Array<{ from_id: string; to_id: string }>) {
+      settlingKeys.add(pairKey(e.from_id, e.to_id));
+    }
+  }
+  return { containers, settlingKeys };
+}
+
+/** Same source file, or a settling edge between the records either side is
+ * part of within its own file. Never lifts to the whole file: an entry's edge
+ * to one row of a 261-row file must not settle its sections against the
+ * other 260. */
+function settledByFile(structure: FileStructure, a: PairSide, b: PairSide): boolean {
+  if (a.source_file === b.source_file) return true;
+  const up = (id: string): string[] => [id, ...(structure.containers.get(id) ?? [])];
+  const as = up(a.id);
+  const bs = up(b.id);
+  if (as.length === 1 && bs.length === 1) return false; // the direct edge was already checked
+  for (const x of as) {
+    for (const y of bs) {
+      if (structure.settlingKeys.has(pairKey(x, y))) return true;
+    }
+  }
+  return false;
 }
 
 /** A candidate is offered unless a still-current verdict covers it. */

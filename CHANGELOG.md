@@ -17,6 +17,50 @@ upgrading — the MCP tool `docdog_status` says so in its **Server** block. The
 CLI cannot: `docdog status` describes the installation on disk, and knows
 nothing about a server process someone else started.
 
+## 0.5.1
+
+**Action required:** run `docdog index` once after upgrading. It removes
+vectors an older version stored for records with an empty body, without
+re-embedding anything. A `--path`-scoped run does not do this; a plain one
+does. Run `docdog update` to get two revised skills: `ingest` and `feedback`
+(which now describes a private evidence repository for reports a short
+reproduction cannot carry).
+
+### Changed
+
+**`docdog pairs` no longer pairs records from the same file (FRICTION-062,
+#3).** Sections a parser carves out of one file were nominated as
+near-duplicates of each other, and a section was paired with the rows it
+amends even when the file's head record said so. Now, by default, two records
+from one file never pair, and a settling edge on a record also settles for the
+records `part_of` it in the same file. It is never extended to a whole file.
+The run prints how many pairs this settled. To see them again:
+
+```yaml
+pairs:
+  within_file: offer    # default: settle
+```
+
+### Fixed
+
+**A record with an empty body no longer gets a vector (FRICTION-060, #2).**
+Every empty body embedded to the same vector, so all of them paired with each
+other at cosine 1.000 and could match any query by meaning. An empty record is
+now findable by title and description only, and `docdog index` and
+`docdog status` name the records this applies to.
+
+**`docdog status` no longer repairs the embed store.** It opened the store the
+way `docdog index` does, which deletes a file that is not a store and drops
+every vector on a schema mismatch. It opens it read-only now and reports such
+a store as a problem; the next `docdog index` repairs it.
+
+**`docdog search --limit` refuses a limit that is not a positive integer**
+(`LIMIT_INVALID`). `-1` silently dropped the last result, and a non-number was
+reported as a stale cache.
+
+**`docdog suggest-edges --id` accepts `?`** as a literal character. It threw
+while building the pattern.
+
 ## 0.5.0
 
 **Action required:** none to keep working. Run `docdog update` to get two

@@ -7,7 +7,8 @@
  * embed-store paths: `collectStatus` resolves both from projectRoot, so
  * the test exercises the same resolution the surfaces do.
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import Database from "better-sqlite3";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -179,6 +180,39 @@ body
     expect(report.embedStore.shared).toBe(false);
     expect(formatEmbedStore(report.embedStore)).toContain("3 vector(s)");
     expect(formatEmbedStore(report.embedStore)).toContain("project-local");
+  });
+
+  it("never repairs a store it cannot read — reports it, and leaves the file byte-identical", async () => {
+    await runCacheIndexer(opts());
+    const path = collectStatus(dir, config).embedStore.path;
+    // A store at another schema version: `index` would drop every vector, and
+    // status used to do exactly that on open. A browser GET on the view's
+    // /index reaches this path, so it must be read-only.
+    const db = new Database(path);
+    db.prepare(`UPDATE meta SET value = '99' WHERE key = 'schema_version'`).run();
+    db.pragma("wal_checkpoint(TRUNCATE)");
+    db.close();
+    const before = readFileSync(path);
+
+    const report = collectStatus(dir, config);
+
+    expect(report.embedStore.problem).toContain("schema v99");
+    expect(report.embedStore.vectors).toBeNull();
+    expect(formatEmbedStore(report.embedStore)).toContain("the next \"docdog index\" rebuilds it");
+    expect(readFileSync(path).equals(before)).toBe(true);
+  });
+
+  it("reports a store file that is not SQLite rather than deleting it", async () => {
+    await runCacheIndexer(opts());
+    const path = collectStatus(dir, config).embedStore.path;
+    rmSync(`${path}-wal`, { force: true });
+    rmSync(`${path}-shm`, { force: true });
+    writeFileSync(path, "not a database at all, padded past the sqlite header size ".repeat(4));
+
+    const report = collectStatus(dir, config);
+
+    expect(report.embedStore.problem).toBeDefined();
+    expect(readFileSync(path, "utf8")).toContain("not a database at all");
   });
 
   it("throws when no cache has been built — an unindexed project is the caller's to report", () => {
